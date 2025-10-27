@@ -8,8 +8,12 @@ import ru.ifmo.highload.dto.order.OrderStatus;
 
 public interface OrderService {
     OrderResponse createOrder(OrderCreateRequest request);
+
     OrderResponse getOrderById(Long id);
+
     OrderResponse updateOrderStatus(Long id, OrderStatus status);
+
     Page<OrderResponse> getUserOrders(Long userId, Pageable pageable);
+
     Page<OrderResponse> getMyOrders(Pageable pageable);
 }

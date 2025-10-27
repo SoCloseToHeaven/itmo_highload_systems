@@ -8,9 +8,14 @@ import ru.ifmo.highload.dto.category.CategoryUpdateRequest;
 
 public interface CategoryService {
     Page<CategoryResponse> getAllCategories(Pageable pageable);
+
     CategoryResponse getCategoryById(Long id);
+
     CategoryResponse createCategory(CategoryCreateRequest request);
+
     CategoryResponse updateCategory(Long id, CategoryUpdateRequest request);
+
     void deleteCategory(Long id);
+
     Page<CategoryResponse> getRootCategories(Pageable pageable);
 }

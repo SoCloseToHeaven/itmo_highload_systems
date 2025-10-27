@@ -7,14 +7,19 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import java.util.Optional;
+
 @Repository
 interface CategoryRepository extends JpaRepository<Category, Long> {
-
     Page<Category> findAll(Pageable pageable);
 
-    List<Category> findByParentCategoryIdIsNull();
+    Page<Category> findByParentCategoryIdIsNull(Pageable pageable); // Убедимся что этот метод есть
+
+    Optional<Category> findById(Long id);
 
     boolean existsByNameAndParentCategoryId(String name, Long parentCategoryId);
 
     List<Category> findByParentCategoryId(Long parentId);
+
+    boolean existsById(Long id);
 }

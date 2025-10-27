@@ -8,7 +8,10 @@ import java.util.List;
 
 public interface DiscountService {
     DiscountResponse createDiscount(DiscountCreateRequest request);
+
     DiscountResponse updateDiscount(Long discountId, DiscountUpdateRequest request);
+
     void deleteDiscount(Long discountId);
+
     List<DiscountResponse> getActiveDiscounts();
 }
