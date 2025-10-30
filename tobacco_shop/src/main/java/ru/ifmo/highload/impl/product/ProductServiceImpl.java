@@ -23,7 +23,6 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final CategoryService categoryService;
-    private final PriceService priceService;
 
     @Override
     @Transactional(readOnly = true)
@@ -115,13 +114,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductResponse toProductResponse(Product product) {
-        // Используем PriceService для получения текущей цены
-        Integer currentPrice;
-        try {
-            currentPrice = priceService.getCurrentPriceForProduct(product.getId());
-        } catch (RuntimeException e) {
-            currentPrice = 0; // Если цена не установлена
-        }
+//        // Используем PriceService для получения текущей цены
+//        Integer currentPrice;
+//        try {
+//            currentPrice = priceService.getCurrentPriceForProduct(product.getId());
+//        } catch (RuntimeException e) {
+//            currentPrice = 0; // Если цена не установлена
+//        } TODO: Цена продукта должна получаться не здесь, а вызовом отдельного эндпоинта, зная ID продукта
 
         // Получаем категории продукта через ProductCategoryRepository
         List<ProductCategory> productCategories = productCategoryRepository.findByProductId(product.getId());
@@ -141,7 +140,6 @@ public class ProductServiceImpl implements ProductService {
         response.setName(product.getName());
         response.setDescription(product.getDescription());
         response.setStockQuantity(product.getStockQuantity());
-        response.setCurrentPrice(currentPrice);
         response.setCategories(categories);
 
         return response;
