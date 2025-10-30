@@ -58,7 +58,6 @@ class ProductServiceImplTest {
 
         when(categoryService.getCategoryById(categoryId)).thenReturn(categoryResponse);
         when(productRepository.findByCategoryId(categoryId, pageable)).thenReturn(productPage);
-        when(priceService.getCurrentPriceForProduct(1L)).thenReturn(45000);
         when(productCategoryRepository.findByProductId(1L)).thenReturn(List.of());
 
         Page<ProductResponse> result = productService.getProductsByCategory(categoryId, pageable);
@@ -66,7 +65,6 @@ class ProductServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         assertEquals("HQD Crystal Plus", result.getContent().get(0).getName());
-        assertEquals(45000, result.getContent().get(0).getCurrentPrice());
         verify(productRepository, times(1)).findByCategoryId(categoryId, pageable);
     }
 
@@ -95,7 +93,6 @@ class ProductServiceImplTest {
         product.setStockQuantity(50);
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        when(priceService.getCurrentPriceForProduct(productId)).thenReturn(45000);
         when(productCategoryRepository.findByProductId(productId)).thenReturn(List.of());
 
         ProductResponse result = productService.getProductById(productId);
@@ -103,7 +100,6 @@ class ProductServiceImplTest {
         assertNotNull(result);
         assertEquals(productId, result.getId());
         assertEquals("HQD Crystal Plus", result.getName());
-        assertEquals(45000, result.getCurrentPrice());
         verify(productRepository, times(1)).findById(productId);
     }
 
@@ -140,7 +136,6 @@ class ProductServiceImplTest {
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
         when(productRepository.save(any(Product.class))).thenReturn(updatedProduct);
-        when(priceService.getCurrentPriceForProduct(productId)).thenReturn(45000);
         when(productCategoryRepository.findByProductId(productId)).thenReturn(List.of());
 
         ProductResponse result = productService.updateProduct(productId, request);
@@ -165,7 +160,6 @@ class ProductServiceImplTest {
         Page<Product> productPage = new PageImpl<>(List.of(product));
 
         when(productRepository.findByNameContainingIgnoreCase(searchTerm, pageable)).thenReturn(productPage);
-        when(priceService.getCurrentPriceForProduct(1L)).thenReturn(45000);
         when(productCategoryRepository.findByProductId(1L)).thenReturn(List.of());
 
         Page<ProductResponse> result = productService.searchProducts(searchTerm, pageable);
@@ -195,7 +189,6 @@ class ProductServiceImplTest {
         when(productCategoryRepository.existsByProductIdAndCategoryId(productId, categoryId)).thenReturn(false);
         when(productCategoryRepository.save(any(ProductCategory.class))).thenReturn(new ProductCategory());
 
-        when(priceService.getCurrentPriceForProduct(productId)).thenReturn(45000);
         when(productCategoryRepository.findByProductId(productId)).thenReturn(List.of());
 
         ProductResponse result = productService.addProductToCategory(productId, categoryId);
@@ -236,7 +229,6 @@ class ProductServiceImplTest {
         when(categoryService.getCategoryById(categoryId)).thenReturn(new CategoryResponse());
         doNothing().when(productCategoryRepository).deleteByProductIdAndCategoryId(productId, categoryId);
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        when(priceService.getCurrentPriceForProduct(productId)).thenReturn(45000);
         when(productCategoryRepository.findByProductId(productId)).thenReturn(List.of());
 
         ProductResponse result = productService.removeProductFromCategory(productId, categoryId);
