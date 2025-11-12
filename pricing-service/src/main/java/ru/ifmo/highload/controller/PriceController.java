@@ -1,4 +1,4 @@
-package ru.ifmo.highload.controller.actual_price;
+package ru.ifmo.highload.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

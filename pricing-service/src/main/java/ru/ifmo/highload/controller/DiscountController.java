@@ -1,4 +1,4 @@
-package ru.ifmo.highload.controller.discount;
+package ru.ifmo.highload.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package ru.ifmo.highload.controller.order;
+package ru.ifmo.highload.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
