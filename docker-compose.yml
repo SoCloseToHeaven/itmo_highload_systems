@@ -1,36 +1,139 @@
+version: '3.8'
+
 services:
-  tobacco-shop:
-    container_name: tobacco_shop
-    restart: always
-    build: ./tobacco_shop/
-    image: tobacco_shop
-    depends_on:
-      - postgres
-    networks:
-      - postgres
-    environment:
-      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tobacco"
-      - "SPRING_DATASOURCE_USERNAME=admin"
-      - "SPRING_DATASOURCE_PASSWORD=root"
-  
-  postgres:
+  # Базы данных
+  postgres-catalog:
     image: postgres:15.5
-    container_name: postgres-db
-    restart: always
+    container_name: postgres-catalog
+    environment:
+      POSTGRES_DB: catalog_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=tobacco
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
     networks:
-      - postgres
+      - tobacco-net
+
+  postgres-pricing:
+    image: postgres:15.5
+    container_name: postgres-pricing
+    environment:
+      POSTGRES_DB: pricing_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5433:5432"
+    networks:
+      - tobacco-net
+
+  postgres-order:
+    image: postgres:15.5
+    container_name: postgres-order
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5434:5432"
+    networks:
+      - tobacco-net
+
+  # Infrastructure сервисы
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./config-repo:/config-repo
+    environment:
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=file:///config-repo
+    networks:
+      - tobacco-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  service-discovery:
+    build: ./service-discovery
+    container_name: service-discovery
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+    depends_on:
+      config-server:
+        condition: service_healthy
+    networks:
+      - tobacco-net
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+    depends_on:
+      - service-discovery
+    networks:
+      - tobacco-net
+
+  # Бизнес-сервисы
+  catalog-service:
+    build: ./catalog-service
+    container_name: catalog-service
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_NAME=catalog-service
+    depends_on:
+      postgres-catalog:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+      service-discovery:
+        condition: service_started
+    networks:
+      - tobacco-net
+
+  pricing-service:
+    build: ./pricing-service
+    container_name: pricing-service
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_NAME=pricing-service
+    depends_on:
+      postgres-pricing:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+      service-discovery:
+        condition: service_started
+    networks:
+      - tobacco-net
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_CLOUD_CONFIG_NAME=order-service
+    depends_on:
+      postgres-order:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+      service-discovery:
+        condition: service_started
+      catalog-service:
+        condition: service_started
+      pricing-service:
+        condition: service_started
+    networks:
+      - tobacco-net
 
 networks:
-  postgres:
+  tobacco-net:
     driver: bridge
-
-volumes:
-  postgres-data:
