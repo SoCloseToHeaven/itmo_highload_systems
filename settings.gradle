@@ -1,0 +1,5 @@
+rootProject.name = 'itmo_highload_systems'
+
+include(
+        'tobacco_shop'
+)
