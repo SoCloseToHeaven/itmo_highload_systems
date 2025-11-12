@@ -1,0 +1,36 @@
+services:
+  tobacco-shop:
+    container_name: tobacco_shop
+    restart: always
+    build: ./tobacco_shop/
+    image: tobacco_shop
+    depends_on:
+      - postgres
+    networks:
+      - postgres
+    environment:
+      - "SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tobacco"
+      - "SPRING_DATASOURCE_USERNAME=admin"
+      - "SPRING_DATASOURCE_PASSWORD=root"
+  
+  postgres:
+    image: postgres:15.5
+    container_name: postgres-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=tobacco
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - postgres
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  postgres-data:

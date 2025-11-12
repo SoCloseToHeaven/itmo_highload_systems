@@ -1,5 +1,11 @@
 rootProject.name = 'itmo_highload_systems'
 
 include(
-        'tobacco_shop'
+        'config-server',
+        'service-discovery',
+        'api-gateway',
+        'catalog-service',
+        'pricing-service',
+        'order-service',
+        'tobacco-shop-communication-lib'
 )
