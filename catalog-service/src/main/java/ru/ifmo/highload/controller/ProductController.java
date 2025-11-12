@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.api.ProductService;
+import ru.ifmo.highload.controller.product.ProductApi;
 import ru.ifmo.highload.dto.product.ProductResponse;
 import ru.ifmo.highload.dto.product.ProductUpdateRequest;
 

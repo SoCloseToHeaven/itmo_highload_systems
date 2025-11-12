@@ -1,19 +1,31 @@
-# ????????? ?????? ??? pricing-service (??????????)
+# Конфигурация сервиса для pricing-service
 server:
   port: 8082
 
 spring:
-  r2dbc:
-    url: r2dbc:postgresql://postgres-pricing:5432/pricing_db
+  application:
+    name: pricing-service
+  datasource:
+    url: jdbc:postgresql://postgres-pricing:5432/pricing_db
     username: admin
     password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   liquibase:
     change-log: classpath:db/changelog-master.yml
     enabled: true
-  # ????????? ??????????? ??????????
-  main:
-    web-application-type: reactive
-    allow-bean-definition-overriding: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://service-discovery:8761/eureka/
+  instance:
+    prefer-ip-address: true
 
 # ?????????? ?????????
 springdoc:

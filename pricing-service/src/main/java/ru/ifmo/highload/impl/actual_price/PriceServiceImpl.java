@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.PriceService;
+import ru.ifmo.highload.client.ProductServiceClient;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
@@ -13,14 +14,14 @@ import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
 public class PriceServiceImpl implements PriceService {
 
     private final ActualPriceRepository actualPriceRepository;
-    private final ProductService productService;
+    private final ProductServiceClient productServiceClient;
 
     @Override
     @Transactional
     public PriceResponse createPrice(PriceCreateRequest request) {
-        // Используем ProductService для проверки существования продукта
+        // Используем ProductServiceClient для проверки существования продукта
         try {
-            productService.getProductById(request.getProductId());
+            productServiceClient.getProductById(request.getProductId());
         } catch (RuntimeException e) {
             throw new RuntimeException("Product not found with id: " + request.getProductId());
         }

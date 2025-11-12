@@ -6,9 +6,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.OrderService;
-import ru.ifmo.highload.api.PriceService;
-import ru.ifmo.highload.dto.order.OrderCreateRequest;
-import ru.ifmo.highload.dto.order.OrderResponse;
+import ru.ifmo.highload.client.PriceServiceClient;
+import ru.ifmo.highload.client.ProductServiceClient;
+import ru.ifmo.highload.dto.order.*;
 import ru.ifmo.highload.dto.product.ProductResponse;
 import ru.ifmo.highload.dto.product.ProductUpdateRequest;
 
@@ -22,8 +22,8 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
-    private final ProductService productService;
-    private final PriceService priceService;
+    private final ProductServiceClient productServiceClient;
+    private final PriceServiceClient priceServiceClient;
 
     @Override
     @Transactional
@@ -42,13 +42,13 @@ public class OrderServiceImpl implements OrderService {
         int totalSum = 0;
 
         for (OrderItemRequest item : request.getItems()) {
-            ProductResponse productResponse = productService.getProductById(item.getProductId());
+            ProductResponse productResponse = productServiceClient.getProductById(item.getProductId());
 
             if (productResponse.getStockQuantity() < item.getQuantity()) {
                 throw new RuntimeException("Insufficient stock for product: " + productResponse.getName());
             }
 
-            Integer currentPrice = priceService.getCurrentPriceForProduct(item.getProductId());
+            Integer currentPrice = priceServiceClient.getCurrentPriceForProduct(item.getProductId());
             int itemTotal = currentPrice * item.getQuantity();
             totalSum += itemTotal;
 
@@ -67,7 +67,7 @@ public class OrderServiceImpl implements OrderService {
             updateRequest.setDescription(productResponse.getDescription());
             updateRequest.setStockQuantity(productResponse.getStockQuantity() - item.getQuantity());
 
-            productService.updateProduct(item.getProductId(), updateRequest);
+            productServiceClient.updateProduct(item.getProductId(), updateRequest);
         }
 
         orderProductRepository.saveAll(orderProducts);
@@ -125,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItemResponse> items = orderProducts.stream()
                 .map(op -> {
                     ProductResponse product =
-                            productService.getProductById(op.getProductId());
+                            productServiceClient.getProductById(op.getProductId());
 
                     OrderItemResponse itemResponse = new OrderItemResponse();
                     itemResponse.setProductId(op.getProductId());

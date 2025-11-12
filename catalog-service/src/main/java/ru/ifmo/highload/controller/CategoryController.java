@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.api.CategoryService;
+import ru.ifmo.highload.controller.category.CategoryApi;
 import ru.ifmo.highload.dto.category.CategoryCreateRequest;
 import ru.ifmo.highload.dto.category.CategoryResponse;
 import ru.ifmo.highload.dto.category.CategoryUpdateRequest;

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.api.PriceService;
+import ru.ifmo.highload.controller.actual_price.PriceApi;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
@@ -40,5 +41,10 @@ public class PriceController implements PriceApi {
     public ResponseEntity<Void> deletePriceByProduct(Long productId) {
         priceService.deletePriceByProductId(productId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/product/{productId}/current")
+    public ResponseEntity<Integer> getCurrentPriceForProduct(@PathVariable Long productId) {
+        return ResponseEntity.ok(priceService.getCurrentPriceForProduct(productId));
     }
 }

@@ -1,8 +1,10 @@
-# ????????? ?????? ??? order-service
+# Конфигурация сервиса для order-service
 server:
   port: 8083
 
 spring:
+  application:
+    name: order-service
   datasource:
     url: jdbc:postgresql://postgres-order:5432/order_db
     username: admin
@@ -17,6 +19,13 @@ spring:
   liquibase:
     change-log: classpath:db/changelog-master.yml
     enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://service-discovery:8761/eureka/
+  instance:
+    prefer-ip-address: true
 
 # ????????? Feign ???????? ??? order-service
 feign:

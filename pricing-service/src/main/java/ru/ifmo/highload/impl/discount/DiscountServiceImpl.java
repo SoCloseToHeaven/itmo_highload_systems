@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.DiscountService;
 import ru.ifmo.highload.api.PriceService;
+import ru.ifmo.highload.client.ProductServiceClient;
 import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
@@ -18,15 +19,15 @@ import java.util.stream.Collectors;
 public class DiscountServiceImpl implements DiscountService {
 
     private final DiscountRepository discountRepository;
-    private final ProductService productService;
+    private final ProductServiceClient productServiceClient;
     private final PriceService priceService;
 
     @Override
     @Transactional
     public DiscountResponse createDiscount(DiscountCreateRequest request) {
-        // Используем ProductService для проверки существования продукта
+        // Используем ProductServiceClient для проверки существования продукта
         try {
-            productService.getProductById(request.getProductId());
+            productServiceClient.getProductById(request.getProductId());
         } catch (RuntimeException e) {
             throw new RuntimeException("Product not found with id: " + request.getProductId());
         }

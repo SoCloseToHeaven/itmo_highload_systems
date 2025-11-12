@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.CategoryService;
+import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.category.CategoryResponse;
 import ru.ifmo.highload.dto.product.ProductResponse;
 import ru.ifmo.highload.dto.product.ProductUpdateRequest;

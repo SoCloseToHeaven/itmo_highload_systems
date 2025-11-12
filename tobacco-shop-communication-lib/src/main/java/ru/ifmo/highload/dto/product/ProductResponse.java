@@ -22,9 +22,6 @@ public class ProductResponse {
     @Schema(description = "Количество товара на складе", example = "100")
     private Integer stockQuantity;
 
-//    @Schema(description = "Текущая цена в копейках", example = "45000")
-//    private Integer currentPrice;
-
     @Schema(description = "Список категорий товара")
     private List<CategoryResponse> categories;
 }
