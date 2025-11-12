@@ -2,12 +2,14 @@ package ru.ifmo.highload.impl.actual_price;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.api.PriceService;
 import ru.ifmo.highload.client.ProductServiceClient;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -17,72 +19,70 @@ public class PriceServiceImpl implements PriceService {
     private final ProductServiceClient productServiceClient;
 
     @Override
-    @Transactional
-    public PriceResponse createPrice(PriceCreateRequest request) {
-        // Используем ProductServiceClient для проверки существования продукта
-        try {
-            productServiceClient.getProductById(request.getProductId());
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Product not found with id: " + request.getProductId());
-        }
-
-        if (actualPriceRepository.existsByProductId(request.getProductId())) {
-            throw new RuntimeException("Price already exists for this product");
-        }
-
-        ActualPrice price = new ActualPrice();
-        price.setProductId(request.getProductId());
-        price.setPrice(request.getPrice());
-
-        ActualPrice saved = actualPriceRepository.save(price);
-        return toPriceResponse(saved);
+    public Mono<PriceResponse> createPrice(PriceCreateRequest request) {
+        return Mono.fromCallable(() -> productServiceClient.getProductById(request.getProductId()))
+                .flatMap(product -> actualPriceRepository.existsByProductId(request.getProductId())
+                        .flatMap(exists -> {
+                            if (exists) {
+                                return Mono.error(new RuntimeException("Price already exists for this product"));
+                            }
+                            ActualPrice price = ActualPrice.builder()
+                                    .productId(request.getProductId())
+                                    .price(request.getPrice())
+                                    .createdAt(LocalDateTime.now())
+                                    .updatedAt(LocalDateTime.now())
+                                    .build();
+                            return actualPriceRepository.save(price)
+                                    .map(this::toPriceResponse);
+                        }))
+                .onErrorMap(e -> new RuntimeException("Product not found with id: " + request.getProductId(), e));
     }
 
     @Override
-    @Transactional
-    public PriceResponse updatePrice(Long priceId, PriceUpdateRequest request) {
-        ActualPrice price = actualPriceRepository.findById(priceId)
-                .orElseThrow(() -> new RuntimeException("Price not found with id: " + priceId));
-
-        price.setPrice(request.getPrice());
-
-        ActualPrice updated = actualPriceRepository.save(price);
-        return toPriceResponse(updated);
+    public Mono<PriceResponse> updatePrice(Long priceId, PriceUpdateRequest request) {
+        return actualPriceRepository.findById(priceId)
+                .switchIfEmpty(Mono.error(new RuntimeException("Price not found with id: " + priceId)))
+                .flatMap(price -> {
+                    price.setPrice(request.getPrice());
+                    price.setUpdatedAt(LocalDateTime.now());
+                    return actualPriceRepository.save(price)
+                            .map(this::toPriceResponse);
+                });
     }
 
     @Override
-    @Transactional
-    public PriceResponse updatePriceByProductId(Long productId, PriceUpdateRequest request) {
-        ActualPrice price = actualPriceRepository.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException("Price not found for product with id: " + productId));
-
-        price.setPrice(request.getPrice());
-
-        ActualPrice updated = actualPriceRepository.save(price);
-        return toPriceResponse(updated);
-    }
-
-    @Override
-    @Transactional
-    public void deletePrice(Long priceId) {
-        if (!actualPriceRepository.existsById(priceId)) {
-            throw new RuntimeException("Price not found with id: " + priceId);
-        }
-        actualPriceRepository.deleteById(priceId);
-    }
-
-    @Override
-    @Transactional
-    public void deletePriceByProductId(Long productId) {
-        actualPriceRepository.deleteByProductId(productId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Integer getCurrentPriceForProduct(Long productId) {
+    public Mono<PriceResponse> updatePriceByProductId(Long productId, PriceUpdateRequest request) {
         return actualPriceRepository.findByProductId(productId)
-                .map(ActualPrice::getPrice)
-                .orElseThrow(() -> new RuntimeException("Price not found for product with id: " + productId));
+                .switchIfEmpty(Mono.error(new RuntimeException("Price not found for product with id: " + productId)))
+                .flatMap(price -> {
+                    price.setPrice(request.getPrice());
+                    price.setUpdatedAt(LocalDateTime.now());
+                    return actualPriceRepository.save(price)
+                            .map(this::toPriceResponse);
+                });
+    }
+
+    @Override
+    public Mono<Void> deletePrice(Long priceId) {
+        return actualPriceRepository.existsById(priceId)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return Mono.error(new RuntimeException("Price not found with id: " + priceId));
+                    }
+                    return actualPriceRepository.deleteById(priceId);
+                });
+    }
+
+    @Override
+    public Mono<Void> deletePriceByProductId(Long productId) {
+        return actualPriceRepository.deleteByProductId(productId);
+    }
+
+    @Override
+    public Mono<Integer> getCurrentPriceForProduct(Long productId) {
+        return actualPriceRepository.findByProductId(productId)
+                .switchIfEmpty(Mono.error(new RuntimeException("Price not found for product with id: " + productId)))
+                .map(ActualPrice::getPrice);
     }
 
     private PriceResponse toPriceResponse(ActualPrice price) {

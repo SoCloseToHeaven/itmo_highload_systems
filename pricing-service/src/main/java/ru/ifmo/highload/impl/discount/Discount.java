@@ -1,54 +1,42 @@
 package ru.ifmo.highload.impl.discount;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "discount")
-@Getter
-@Setter
+@Table("discount")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 class Discount {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Column(name = "product_id", nullable = false)
-    private Long productId; // Вместо связи @ManyToOne
+    @Column("product_id")
+    private Long productId;
 
-    @NotNull
-    @Column(name = "actual_price_id", nullable = false)
-    private Long actualPriceId; // Вместо связи @ManyToOne
+    @Column("actual_price_id")
+    private Long actualPriceId;
 
-    @NotNull
-    @Column(name = "start_date", nullable = false)
+    @Column("start_date")
     private LocalDateTime startDate;
 
-    @NotNull
-    @Column(name = "end_date", nullable = false)
+    @Column("end_date")
     private LocalDateTime endDate;
 
-    @Column(name = "created_at")
+    @Column("created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column("updated_at")
     private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 
     public boolean isActive() {
         LocalDateTime now = LocalDateTime.now();

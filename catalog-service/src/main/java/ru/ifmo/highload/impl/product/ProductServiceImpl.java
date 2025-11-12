@@ -26,7 +26,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
-        // Используем CategoryService для проверки существования категории
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
@@ -72,7 +71,6 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-        // Используем CategoryService для проверки существования категории
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
@@ -98,7 +96,6 @@ public class ProductServiceImpl implements ProductService {
             throw new RuntimeException("Product not found with id: " + productId);
         }
 
-        // Используем CategoryService для проверки существования категории
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
@@ -113,22 +110,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductResponse toProductResponse(Product product) {
-//        // Используем PriceService для получения текущей цены
-//        Integer currentPrice;
-//        try {
-//            currentPrice = priceService.getCurrentPriceForProduct(product.getId());
-//        } catch (RuntimeException e) {
-//            currentPrice = 0; // Если цена не установлена
-//        } TODO: Цена продукта должна получаться не здесь, а вызовом отдельного эндпоинта, зная ID продукта
-
-        // Получаем категории продукта через ProductCategoryRepository
         List<ProductCategory> productCategories = productCategoryRepository.findByProductId(product.getId());
         List<CategoryResponse> categories = productCategories.stream()
                 .map(pc -> {
                     try {
                         return categoryService.getCategoryById(pc.getCategoryId());
                     } catch (RuntimeException e) {
-                        return null; // Пропускаем несуществующие категории
+                        return null;
                     }
                 })
                 .filter(Objects::nonNull)

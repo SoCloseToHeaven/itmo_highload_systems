@@ -40,7 +40,6 @@ class CategoryServiceImpl implements CategoryService {
             }
         }
 
-        // Проверяем уникальность имени в рамках родительской категории
         if (categoryRepository.existsByNameAndParentCategoryId(request.getName(), request.getParentCategoryId())) {
             throw new RuntimeException("Category with this name already exists in the parent category");
         }
@@ -65,13 +64,11 @@ class CategoryServiceImpl implements CategoryService {
                 throw new RuntimeException("Parent category not found with id: " + request.getParentCategoryId());
             }
 
-            // Проверяем, не создаем ли циклическую зависимость
             if (isCircularDependency(id, request.getParentCategoryId())) {
                 throw new RuntimeException("Circular dependency detected");
             }
         }
 
-        // Проверяем уникальность имени
         if (!request.getName().equals(category.getName())) {
             if (categoryRepository.existsByNameAndParentCategoryId(request.getName(), request.getParentCategoryId())) {
                 throw new RuntimeException("Category with this name already exists in the parent category");
@@ -116,7 +113,6 @@ class CategoryServiceImpl implements CategoryService {
     }
 
     private boolean isCircularDependency(Long categoryId, Long potentialParentId) {
-        // Простая проверка на циклическую зависимость
         if (categoryId.equals(potentialParentId)) {
             return true;
         }

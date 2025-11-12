@@ -13,7 +13,7 @@ import java.util.Optional;
 interface CategoryRepository extends JpaRepository<Category, Long> {
     Page<Category> findAll(Pageable pageable);
 
-    Page<Category> findByParentCategoryIdIsNull(Pageable pageable); // Убедимся что этот метод есть
+    Page<Category> findByParentCategoryIdIsNull(Pageable pageable);
 
     Optional<Category> findById(Long id);
 

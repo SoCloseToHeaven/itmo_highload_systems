@@ -1,17 +1,17 @@
 package ru.ifmo.highload.api;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
 
-import java.util.List;
-
 public interface DiscountService {
-    DiscountResponse createDiscount(DiscountCreateRequest request);
+    Mono<DiscountResponse> createDiscount(DiscountCreateRequest request);
 
-    DiscountResponse updateDiscount(Long discountId, DiscountUpdateRequest request);
+    Mono<DiscountResponse> updateDiscount(Long discountId, DiscountUpdateRequest request);
 
-    void deleteDiscount(Long discountId);
+    Mono<Void> deleteDiscount(Long discountId);
 
-    List<DiscountResponse> getActiveDiscounts();
+    Flux<DiscountResponse> getActiveDiscounts();
 }

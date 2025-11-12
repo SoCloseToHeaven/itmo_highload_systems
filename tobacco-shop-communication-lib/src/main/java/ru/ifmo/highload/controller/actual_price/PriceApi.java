@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
@@ -23,7 +23,7 @@ public interface PriceApi {
             @ApiResponse(responseCode = "409", description = "Цена для этого товара уже существует")
     })
     @PostMapping
-    ResponseEntity<PriceResponse> createPrice(
+    Mono<ResponseEntity<PriceResponse>> createPrice(
             @Parameter(description = "Данные для создания цены") @Valid @RequestBody PriceCreateRequest request);
 
     @Operation(summary = "Обновить цену по ID", description = "Обновить существующую цену по ее ID")
@@ -32,7 +32,7 @@ public interface PriceApi {
             @ApiResponse(responseCode = "404", description = "Цена не найдена")
     })
     @PutMapping("/{priceId}")
-    ResponseEntity<PriceResponse> updatePrice(
+    Mono<ResponseEntity<PriceResponse>> updatePrice(
             @Parameter(description = "ID цены для обновления") @PathVariable Long priceId,
             @Parameter(description = "Обновленные данные цены") @Valid @RequestBody PriceUpdateRequest request);
 
@@ -42,7 +42,7 @@ public interface PriceApi {
             @ApiResponse(responseCode = "404", description = "Цена не найдена")
     })
     @DeleteMapping("/{priceId}")
-    ResponseEntity<Void> deletePrice(
+    Mono<ResponseEntity<Void>> deletePrice(
             @Parameter(description = "ID цены для удаления") @PathVariable Long priceId);
 
     @Operation(summary = "Обновить цену по ID товара", description = "Обновить цену для конкретного товара")
@@ -51,7 +51,7 @@ public interface PriceApi {
             @ApiResponse(responseCode = "404", description = "Цена для этого товара не найдена")
     })
     @PutMapping("/product/{productId}")
-    ResponseEntity<PriceResponse> updatePriceByProduct(
+    Mono<ResponseEntity<PriceResponse>> updatePriceByProduct(
             @Parameter(description = "ID товара") @PathVariable Long productId,
             @Parameter(description = "Обновленные данные цены") @Valid @RequestBody PriceUpdateRequest request);
 
@@ -61,6 +61,6 @@ public interface PriceApi {
             @ApiResponse(responseCode = "404", description = "Цена для этого товара не найдена")
     })
     @DeleteMapping("/product/{productId}")
-    ResponseEntity<Void> deletePriceByProduct(
+    Mono<ResponseEntity<Void>> deletePriceByProduct(
             @Parameter(description = "ID товара") @PathVariable Long productId);
 }

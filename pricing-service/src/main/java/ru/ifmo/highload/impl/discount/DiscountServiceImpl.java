@@ -2,7 +2,8 @@ package ru.ifmo.highload.impl.discount;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.api.DiscountService;
 import ru.ifmo.highload.api.PriceService;
 import ru.ifmo.highload.client.ProductServiceClient;
@@ -11,8 +12,6 @@ import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,71 +22,62 @@ public class DiscountServiceImpl implements DiscountService {
     private final PriceService priceService;
 
     @Override
-    @Transactional
-    public DiscountResponse createDiscount(DiscountCreateRequest request) {
-        // Используем ProductServiceClient для проверки существования продукта
-        try {
-            productServiceClient.getProductById(request.getProductId());
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Product not found with id: " + request.getProductId());
-        }
-
-        // Используем PriceService для проверки существования цены
-        try {
-            priceService.getCurrentPriceForProduct(request.getProductId());
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Price not found for product with id: " + request.getProductId());
-        }
-
+    public Mono<DiscountResponse> createDiscount(DiscountCreateRequest request) {
         if (request.getEndDate().isBefore(request.getStartDate())) {
-            throw new RuntimeException("End date must be after start date");
+            return Mono.error(new RuntimeException("End date must be after start date"));
         }
 
-        Discount discount = new Discount();
-        discount.setProductId(request.getProductId());
-        discount.setActualPriceId(request.getActualPriceId());
-        discount.setStartDate(request.getStartDate());
-        discount.setEndDate(request.getEndDate());
-
-        Discount saved = discountRepository.save(discount);
-        return toDiscountResponse(saved);
+        return Mono.fromCallable(() -> productServiceClient.getProductById(request.getProductId()))
+                .flatMap(product -> priceService.getCurrentPriceForProduct(request.getProductId())
+                        .flatMap(price -> {
+                            Discount discount = Discount.builder()
+                                    .productId(request.getProductId())
+                                    .actualPriceId(request.getActualPriceId())
+                                    .startDate(request.getStartDate())
+                                    .endDate(request.getEndDate())
+                                    .createdAt(LocalDateTime.now())
+                                    .updatedAt(LocalDateTime.now())
+                                    .build();
+                            return discountRepository.save(discount)
+                                    .map(this::toDiscountResponse);
+                        }))
+                .onErrorMap(e -> new RuntimeException("Product or price not found", e));
     }
 
     @Override
-    @Transactional
-    public DiscountResponse updateDiscount(Long discountId, DiscountUpdateRequest request) {
-        Discount discount = discountRepository.findById(discountId)
-                .orElseThrow(() -> new RuntimeException("Discount not found with id: " + discountId));
-
+    public Mono<DiscountResponse> updateDiscount(Long discountId, DiscountUpdateRequest request) {
         if (request.getEndDate().isBefore(request.getStartDate())) {
-            throw new RuntimeException("End date must be after start date");
+            return Mono.error(new RuntimeException("End date must be after start date"));
         }
 
-        discount.setStartDate(request.getStartDate());
-        discount.setEndDate(request.getEndDate());
-        discount.setActualPriceId(request.getActualPriceId());
-
-        Discount updated = discountRepository.save(discount);
-        return toDiscountResponse(updated);
+        return discountRepository.findById(discountId)
+                .switchIfEmpty(Mono.error(new RuntimeException("Discount not found with id: " + discountId)))
+                .flatMap(discount -> {
+                    discount.setStartDate(request.getStartDate());
+                    discount.setEndDate(request.getEndDate());
+                    discount.setActualPriceId(request.getActualPriceId());
+                    discount.setUpdatedAt(LocalDateTime.now());
+                    return discountRepository.save(discount)
+                            .map(this::toDiscountResponse);
+                });
     }
 
     @Override
-    @Transactional
-    public void deleteDiscount(Long discountId) {
-        if (!discountRepository.existsById(discountId)) {
-            throw new RuntimeException("Discount not found with id: " + discountId);
-        }
-        discountRepository.deleteById(discountId);
+    public Mono<Void> deleteDiscount(Long discountId) {
+        return discountRepository.existsById(discountId)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return Mono.error(new RuntimeException("Discount not found with id: " + discountId));
+                    }
+                    return discountRepository.deleteById(discountId);
+                });
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<DiscountResponse> getActiveDiscounts() {
+    public Flux<DiscountResponse> getActiveDiscounts() {
         LocalDateTime now = LocalDateTime.now();
         return discountRepository.findByStartDateBeforeAndEndDateAfter(now, now)
-                .stream()
-                .map(this::toDiscountResponse)
-                .collect(Collectors.toList());
+                .map(this::toDiscountResponse);
     }
 
     private DiscountResponse toDiscountResponse(Discount discount) {

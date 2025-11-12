@@ -1,11 +1,9 @@
 server:
-  port: 8083
+  port: 8081
 
 spring:
-  application:
-    name: order-service
   datasource:
-    url: jdbc:postgresql://postgres-order:5432/order_db
+    url: jdbc:postgresql://postgres-catalog:5432/catalog_db
     username: admin
     password: root
     driver-class-name: org.postgresql.Driver
@@ -15,11 +13,11 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        format_sql: true
   liquibase:
     change-log: classpath:db/changelog-master.yml
     enabled: true
-  main:
-    web-application-type: reactive
 
 eureka:
   client:
@@ -31,14 +29,9 @@ eureka:
 feign:
   client:
     config:
-      catalog-service:
-        connectTimeout: 3000
-        readTimeout: 5000
-        loggerLevel: full
       pricing-service:
         connectTimeout: 3000
         readTimeout: 5000
-        loggerLevel: full
 
 springdoc:
   api-docs:
@@ -49,19 +42,14 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-resilience4j:
-  circuitbreaker:
-    instances:
-      catalogService:
-        slidingWindowSize: 5
-        failureRateThreshold: 40
-        waitDurationInOpenState: 30000
-      pricingService:
-        slidingWindowSize: 5
-        failureRateThreshold: 40
-        waitDurationInOpenState: 30000
-  retry:
-    instances:
-      catalogService:
-        maxAttempts: 3
-        waitDuration: 1000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+

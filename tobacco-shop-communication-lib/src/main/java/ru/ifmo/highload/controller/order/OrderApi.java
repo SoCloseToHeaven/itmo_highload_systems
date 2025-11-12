@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.dto.order.OrderCreateRequest;
 import ru.ifmo.highload.dto.order.OrderResponse;
 import ru.ifmo.highload.dto.order.OrderStatus;
@@ -24,7 +25,7 @@ public interface OrderApi {
             @ApiResponse(responseCode = "404", description = "Товар не найден")
     })
     @PostMapping
-    ResponseEntity<OrderResponse> createOrder(
+    Mono<ResponseEntity<OrderResponse>> createOrder(
             @Parameter(description = "Данные для создания заказа") @Valid @RequestBody OrderCreateRequest request);
 
     @Operation(summary = "Получить заказ по ID", description = "Получить детальную информацию о заказе по его ID")
@@ -33,7 +34,7 @@ public interface OrderApi {
             @ApiResponse(responseCode = "404", description = "Заказ не найден")
     })
     @GetMapping("/{orderId}")
-    ResponseEntity<OrderResponse> getOrder(
+    Mono<ResponseEntity<OrderResponse>> getOrder(
             @Parameter(description = "ID заказа") @PathVariable Long orderId);
 
     @Operation(summary = "Обновить статус заказа", description = "Обновить статус заказа (отмена, завершение и т.д.) с поддержкой транзакций")
@@ -43,7 +44,7 @@ public interface OrderApi {
             @ApiResponse(responseCode = "400", description = "Неверный переход статуса")
     })
     @PutMapping("/{orderId}")
-    ResponseEntity<OrderResponse> updateOrder(
+    Mono<ResponseEntity<OrderResponse>> updateOrder(
             @Parameter(description = "ID заказа для обновления") @PathVariable Long orderId,
             @Parameter(description = "Новый статус заказа") @RequestBody OrderStatus status);
 
@@ -52,7 +53,7 @@ public interface OrderApi {
             @ApiResponse(responseCode = "200", description = "Заказы пользователя успешно получены")
     })
     @GetMapping("/user/{userId}")
-    ResponseEntity<Page<OrderResponse>> getUserOrders(
+    Mono<ResponseEntity<Page<OrderResponse>>> getUserOrders(
             @Parameter(description = "ID пользователя") @PathVariable Long userId,
             @Parameter(description = "Параметры пагинации") Pageable pageable);
 
@@ -61,6 +62,6 @@ public interface OrderApi {
             @ApiResponse(responseCode = "200", description = "Заказы пользователя успешно получены")
     })
     @GetMapping("/my")
-    ResponseEntity<Page<OrderResponse>> getMyOrders(
+    Mono<ResponseEntity<Page<OrderResponse>>> getMyOrders(
             @Parameter(description = "Параметры пагинации") Pageable pageable);
 }

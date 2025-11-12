@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import ru.ifmo.highload.api.OrderService;
 import ru.ifmo.highload.client.PriceServiceClient;
 import ru.ifmo.highload.client.ProductServiceClient;
@@ -26,97 +27,96 @@ public class OrderServiceImpl implements OrderService {
     private final PriceServiceClient priceServiceClient;
 
     @Override
-    @Transactional
-    public OrderResponse createOrder(OrderCreateRequest request) {
-        if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new RuntimeException("Order must contain at least one item");
-        }
-
-        Order order = new Order();
-        order.setStatus(OrderStatus.PENDING);
-        order.setTotalSum(0);
-
-        Order savedOrder = orderRepository.save(order);
-
-        List<OrderProduct> orderProducts = new ArrayList<>();
-        int totalSum = 0;
-
-        for (OrderItemRequest item : request.getItems()) {
-            ProductResponse productResponse = productServiceClient.getProductById(item.getProductId());
-
-            if (productResponse.getStockQuantity() < item.getQuantity()) {
-                throw new RuntimeException("Insufficient stock for product: " + productResponse.getName());
+    public Mono<OrderResponse> createOrder(OrderCreateRequest request) {
+        return Mono.fromCallable(() -> {
+            if (request.getItems() == null || request.getItems().isEmpty()) {
+                throw new RuntimeException("Order must contain at least one item");
             }
 
-            Integer currentPrice = priceServiceClient.getCurrentPriceForProduct(item.getProductId());
-            int itemTotal = currentPrice * item.getQuantity();
-            totalSum += itemTotal;
+            Order order = new Order();
+            order.setStatus(OrderStatus.PENDING);
+            order.setTotalSum(0);
 
-            OrderProduct orderProduct = new OrderProduct();
-            orderProduct.setOrderId(savedOrder.getId());
-            orderProduct.setProductId(item.getProductId());
-            orderProduct.setQuantity(item.getQuantity());
-            orderProduct.setPurchasePrice(currentPrice);
+            Order savedOrder = orderRepository.save(order);
 
-            orderProducts.add(orderProduct);
+            List<OrderProduct> orderProducts = new ArrayList<>();
+            int totalSum = 0;
 
-            // Обновляем остаток через сервис продуктов
-            ProductUpdateRequest updateRequest =
-                    new ProductUpdateRequest();
-            updateRequest.setName(productResponse.getName());
-            updateRequest.setDescription(productResponse.getDescription());
-            updateRequest.setStockQuantity(productResponse.getStockQuantity() - item.getQuantity());
+            for (OrderItemRequest item : request.getItems()) {
+                ProductResponse productResponse = productServiceClient.getProductById(item.getProductId());
 
-            productServiceClient.updateProduct(item.getProductId(), updateRequest);
-        }
+                if (productResponse.getStockQuantity() < item.getQuantity()) {
+                    throw new RuntimeException("Insufficient stock for product: " + productResponse.getName());
+                }
 
-        orderProductRepository.saveAll(orderProducts);
+                Integer currentPrice = priceServiceClient.getCurrentPriceForProduct(item.getProductId());
+                int itemTotal = currentPrice * item.getQuantity();
+                totalSum += itemTotal;
 
-        savedOrder.setTotalSum(totalSum);
-        Order finalOrder = orderRepository.save(savedOrder);
+                OrderProduct orderProduct = new OrderProduct();
+                orderProduct.setOrderId(savedOrder.getId());
+                orderProduct.setProductId(item.getProductId());
+                orderProduct.setQuantity(item.getQuantity());
+                orderProduct.setPurchasePrice(currentPrice);
 
-        return toOrderResponse(finalOrder);
+                orderProducts.add(orderProduct);
+
+                ProductUpdateRequest updateRequest = new ProductUpdateRequest();
+                updateRequest.setName(productResponse.getName());
+                updateRequest.setDescription(productResponse.getDescription());
+                updateRequest.setStockQuantity(productResponse.getStockQuantity() - item.getQuantity());
+
+                productServiceClient.updateProduct(item.getProductId(), updateRequest);
+            }
+
+            orderProductRepository.saveAll(orderProducts);
+
+            savedOrder.setTotalSum(totalSum);
+            Order finalOrder = orderRepository.save(savedOrder);
+
+            return toOrderResponse(finalOrder);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public OrderResponse getOrderById(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
-        return toOrderResponse(order);
+    public Mono<OrderResponse> getOrderById(Long id) {
+        return Mono.fromCallable(() -> {
+            Order order = orderRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+            return toOrderResponse(order);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
-    @Transactional
-    public OrderResponse updateOrderStatus(Long id, OrderStatus status) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+    public Mono<OrderResponse> updateOrderStatus(Long id, OrderStatus status) {
+        return Mono.fromCallable(() -> {
+            Order order = orderRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
 
-        if (status == OrderStatus.CANCELLED) {
-            throw new RuntimeException("Order cannot be cancelled in current status: " + order.getStatus());
-        }
+            if (status == OrderStatus.CANCELLED) {
+                throw new RuntimeException("Order cannot be cancelled in current status: " + order.getStatus());
+            }
 
-        order.setStatus(status);
-        Order updated = orderRepository.save(order);
-        return toOrderResponse(updated);
+            order.setStatus(status);
+            Order updated = orderRepository.save(order);
+            return toOrderResponse(updated);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<OrderResponse> getUserOrders(Long userId, Pageable pageable) {
-        // Временная реализация - возвращаем все заказы
-        // В 3-й лабе добавим фильтрацию по пользователю
-        return orderRepository.findAll(pageable)
-                .map(this::toOrderResponse);
+    public Mono<Page<OrderResponse>> getUserOrders(Long userId, Pageable pageable) {
+        return Mono.fromCallable(() -> {
+            return orderRepository.findAll(pageable)
+                    .map(this::toOrderResponse);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<OrderResponse> getMyOrders(Pageable pageable) {
-        // Временная реализация - возвращаем все заказы
-        // В 3-й лабе добавим фильтрацию по текущему пользователю
-        return orderRepository.findAll(pageable)
-                .map(this::toOrderResponse);
+    public Mono<Page<OrderResponse>> getMyOrders(Pageable pageable) {
+        return Mono.fromCallable(() -> {
+            return orderRepository.findAll(pageable)
+                    .map(this::toOrderResponse);
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     private OrderResponse toOrderResponse(Order order) {

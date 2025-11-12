@@ -1,15 +1,17 @@
 package ru.ifmo.highload.impl.actual_price;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
-import java.util.Optional;
+import reactor.core.publisher.Mono;
 
 @Repository
-interface ActualPriceRepository extends JpaRepository<ActualPrice, Long> {
+interface ActualPriceRepository extends ReactiveCrudRepository<ActualPrice, Long> {
 
-    Optional<ActualPrice> findByProductId(Long productId);
+    Mono<ActualPrice> findByProductId(Long productId);
 
-    void deleteByProductId(Long productId);
+    Mono<Void> deleteByProductId(Long productId);
 
-    boolean existsByProductId(Long productId);
+    @Query("SELECT EXISTS(SELECT 1 FROM actual_price WHERE product_id = :productId)")
+    Mono<Boolean> existsByProductId(Long productId);
 }

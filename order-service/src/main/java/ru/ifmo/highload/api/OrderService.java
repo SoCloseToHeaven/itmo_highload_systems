@@ -2,18 +2,19 @@ package ru.ifmo.highload.api;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.dto.order.OrderCreateRequest;
 import ru.ifmo.highload.dto.order.OrderResponse;
 import ru.ifmo.highload.dto.order.OrderStatus;
 
 public interface OrderService {
-    OrderResponse createOrder(OrderCreateRequest request);
+    Mono<OrderResponse> createOrder(OrderCreateRequest request);
 
-    OrderResponse getOrderById(Long id);
+    Mono<OrderResponse> getOrderById(Long id);
 
-    OrderResponse updateOrderStatus(Long id, OrderStatus status);
+    Mono<OrderResponse> updateOrderStatus(Long id, OrderStatus status);
 
-    Page<OrderResponse> getUserOrders(Long userId, Pageable pageable);
+    Mono<Page<OrderResponse>> getUserOrders(Long userId, Pageable pageable);
 
-    Page<OrderResponse> getMyOrders(Pageable pageable);
+    Mono<Page<OrderResponse>> getMyOrders(Pageable pageable);
 }

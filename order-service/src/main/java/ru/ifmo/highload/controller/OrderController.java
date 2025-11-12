@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.api.OrderService;
 import ru.ifmo.highload.controller.order.OrderApi;
 import ru.ifmo.highload.dto.order.OrderCreateRequest;
@@ -19,27 +20,32 @@ public class OrderController implements OrderApi {
     private final OrderService orderService;
 
     @Override
-    public ResponseEntity<OrderResponse> createOrder(OrderCreateRequest request) {
-        return ResponseEntity.ok(orderService.createOrder(request));
+    public Mono<ResponseEntity<OrderResponse>> createOrder(OrderCreateRequest request) {
+        return orderService.createOrder(request)
+                .map(ResponseEntity::ok);
     }
 
     @Override
-    public ResponseEntity<OrderResponse> getOrder(Long orderId) {
-        return ResponseEntity.ok(orderService.getOrderById(orderId));
+    public Mono<ResponseEntity<OrderResponse>> getOrder(Long orderId) {
+        return orderService.getOrderById(orderId)
+                .map(ResponseEntity::ok);
     }
 
     @Override
-    public ResponseEntity<OrderResponse> updateOrder(Long orderId, OrderStatus status) {
-        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, status));
+    public Mono<ResponseEntity<OrderResponse>> updateOrder(Long orderId, OrderStatus status) {
+        return orderService.updateOrderStatus(orderId, status)
+                .map(ResponseEntity::ok);
     }
 
     @Override
-    public ResponseEntity<Page<OrderResponse>> getUserOrders(Long userId, Pageable pageable) {
-        return ResponseEntity.ok(orderService.getUserOrders(userId, pageable));
+    public Mono<ResponseEntity<Page<OrderResponse>>> getUserOrders(Long userId, Pageable pageable) {
+        return orderService.getUserOrders(userId, pageable)
+                .map(ResponseEntity::ok);
     }
 
     @Override
-    public ResponseEntity<Page<OrderResponse>> getMyOrders(Pageable pageable) {
-        return ResponseEntity.ok(orderService.getMyOrders(pageable));
+    public Mono<ResponseEntity<Page<OrderResponse>>> getMyOrders(Pageable pageable) {
+        return orderService.getMyOrders(pageable)
+                .map(ResponseEntity::ok);
     }
 }

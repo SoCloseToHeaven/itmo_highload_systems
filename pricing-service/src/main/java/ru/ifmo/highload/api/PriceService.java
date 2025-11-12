@@ -1,19 +1,20 @@
 package ru.ifmo.highload.api;
 
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
 
 public interface PriceService {
-    PriceResponse createPrice(PriceCreateRequest request);
+    Mono<PriceResponse> createPrice(PriceCreateRequest request);
 
-    PriceResponse updatePrice(Long priceId, PriceUpdateRequest request);
+    Mono<PriceResponse> updatePrice(Long priceId, PriceUpdateRequest request);
 
-    PriceResponse updatePriceByProductId(Long productId, PriceUpdateRequest request);
+    Mono<PriceResponse> updatePriceByProductId(Long productId, PriceUpdateRequest request);
 
-    void deletePrice(Long priceId);
+    Mono<Void> deletePrice(Long priceId);
 
-    void deletePriceByProductId(Long productId);
+    Mono<Void> deletePriceByProductId(Long productId);
 
-    Integer getCurrentPriceForProduct(Long productId);
+    Mono<Integer> getCurrentPriceForProduct(Long productId);
 }

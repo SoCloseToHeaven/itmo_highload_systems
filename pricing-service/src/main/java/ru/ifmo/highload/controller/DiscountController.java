@@ -3,13 +3,13 @@ package ru.ifmo.highload.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.api.DiscountService;
 import ru.ifmo.highload.controller.discount.DiscountApi;
 import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/discount")
@@ -19,23 +19,25 @@ public class DiscountController implements DiscountApi {
     private final DiscountService discountService;
 
     @Override
-    public ResponseEntity<DiscountResponse> createDiscount(DiscountCreateRequest request) {
-        return ResponseEntity.ok(discountService.createDiscount(request));
+    public Mono<ResponseEntity<DiscountResponse>> createDiscount(DiscountCreateRequest request) {
+        return discountService.createDiscount(request)
+                .map(ResponseEntity::ok);
     }
 
     @Override
-    public ResponseEntity<DiscountResponse> updateDiscount(Long discountId, DiscountUpdateRequest request) {
-        return ResponseEntity.ok(discountService.updateDiscount(discountId, request));
+    public Mono<ResponseEntity<DiscountResponse>> updateDiscount(Long discountId, DiscountUpdateRequest request) {
+        return discountService.updateDiscount(discountId, request)
+                .map(ResponseEntity::ok);
     }
 
     @Override
-    public ResponseEntity<Void> deleteDiscount(Long discountId) {
-        discountService.deleteDiscount(discountId);
-        return ResponseEntity.ok().build();
+    public Mono<ResponseEntity<Void>> deleteDiscount(Long discountId) {
+        return discountService.deleteDiscount(discountId)
+                .then(Mono.just(ResponseEntity.ok().build()));
     }
 
     @Override
-    public ResponseEntity<List<DiscountResponse>> getActiveDiscounts() {
-        return ResponseEntity.ok(discountService.getActiveDiscounts());
+    public Mono<ResponseEntity<Flux<DiscountResponse>>> getActiveDiscounts() {
+        return Mono.just(ResponseEntity.ok(discountService.getActiveDiscounts()));
     }
 }

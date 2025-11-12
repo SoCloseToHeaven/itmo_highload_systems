@@ -19,11 +19,11 @@ class OrderProduct {
 
     @NotNull
     @Column(name = "order_id", nullable = false)
-    private Long orderId; // Вместо связи @ManyToOne
+    private Long orderId;
 
     @NotNull
     @Column(name = "product_id", nullable = false)
-    private Long productId; // Вместо связи @ManyToOne
+    private Long productId;
 
     @NotNull
     @Column(nullable = false)

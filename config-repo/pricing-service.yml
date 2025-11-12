@@ -2,8 +2,6 @@ server:
   port: 8082
 
 spring:
-  application:
-    name: pricing-service
   r2dbc:
     url: r2dbc:postgresql://postgres-pricing:5432/pricing_db
     username: admin
@@ -41,3 +39,4 @@ feign:
       catalog-service:
         connectTimeout: 2000
         readTimeout: 3000
+

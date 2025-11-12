@@ -2,8 +2,6 @@ server:
   port: 8083
 
 spring:
-  application:
-    name: order-service
   datasource:
     url: jdbc:postgresql://postgres-order:5432/order_db
     username: admin
@@ -18,8 +16,6 @@ spring:
   liquibase:
     change-log: classpath:db/changelog-master.yml
     enabled: true
-  main:
-    web-application-type: reactive
 
 eureka:
   client:
@@ -65,3 +61,4 @@ resilience4j:
       catalogService:
         maxAttempts: 3
         waitDuration: 1000
+

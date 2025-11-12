@@ -5,15 +5,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
-
-import java.util.List;
 
 @Tag(name = "Управление скидками", description = "API для управления скидками на товары (для администраторов)")
 public interface DiscountApi {
@@ -25,7 +24,7 @@ public interface DiscountApi {
             @ApiResponse(responseCode = "400", description = "Неверный диапазон дат")
     })
     @PostMapping
-    ResponseEntity<DiscountResponse> createDiscount(
+    Mono<ResponseEntity<DiscountResponse>> createDiscount(
             @Parameter(description = "Данные для создания скидки") @Valid @RequestBody DiscountCreateRequest request);
 
     @Operation(summary = "Обновить скидку", description = "Обновить существующую скидку")
@@ -35,7 +34,7 @@ public interface DiscountApi {
             @ApiResponse(responseCode = "400", description = "Неверный диапазон дат")
     })
     @PutMapping("/{discountId}")
-    ResponseEntity<DiscountResponse> updateDiscount(
+    Mono<ResponseEntity<DiscountResponse>> updateDiscount(
             @Parameter(description = "ID скидки для обновления") @PathVariable Long discountId,
             @Parameter(description = "Обновленные данные скидки") @Valid @RequestBody DiscountUpdateRequest request);
 
@@ -45,7 +44,7 @@ public interface DiscountApi {
             @ApiResponse(responseCode = "404", description = "Скидка не найдена")
     })
     @DeleteMapping("/{discountId}")
-    ResponseEntity<Void> deleteDiscount(
+    Mono<ResponseEntity<Void>> deleteDiscount(
             @Parameter(description = "ID скидки для удаления") @PathVariable Long discountId);
 
     @Operation(summary = "Получить активные скидки", description = "Получить список текущих активных скидок")
@@ -53,5 +52,5 @@ public interface DiscountApi {
             @ApiResponse(responseCode = "200", description = "Активные скидки успешно получены")
     })
     @GetMapping("/active")
-    ResponseEntity<List<DiscountResponse>> getActiveDiscounts();
+    Mono<ResponseEntity<Flux<DiscountResponse>>> getActiveDiscounts();
 }

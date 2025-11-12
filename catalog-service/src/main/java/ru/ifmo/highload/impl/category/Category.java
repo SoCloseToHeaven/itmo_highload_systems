@@ -24,7 +24,7 @@ class Category {
     private String name;
 
     @Column(name = "parent_category_id")
-    private Long parentCategoryId; // Вместо связи @ManyToOne
+    private Long parentCategoryId;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
