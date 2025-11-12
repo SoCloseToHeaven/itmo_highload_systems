@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.DiscountService;
 import ru.ifmo.highload.api.PriceService;
-import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;

@@ -2,12 +2,14 @@ package ru.ifmo.highload;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 
 @SpringBootApplication
-public class TobaccoShopApplication {
+@EnableEurekaServer
+public class ServiceDiscovery {
 
     public static void main(String[] args) {
-        SpringApplication.run(TobaccoShopApplication.class, args);
+        SpringApplication.run(ServiceDiscovery.class, args);
     }
 
 }

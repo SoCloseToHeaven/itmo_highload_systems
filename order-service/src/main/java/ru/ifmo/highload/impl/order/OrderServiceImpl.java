@@ -7,7 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.OrderService;
 import ru.ifmo.highload.api.PriceService;
-import ru.ifmo.highload.api.ProductService;
+import ru.ifmo.highload.dto.order.OrderCreateRequest;
+import ru.ifmo.highload.dto.order.OrderResponse;
 import ru.ifmo.highload.dto.product.ProductResponse;
 import ru.ifmo.highload.dto.product.ProductUpdateRequest;
 

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.PriceService;
-import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
