@@ -2,8 +2,13 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/api-gateway/itmo_highload_systems.api-gateway.main.iml" filepath="$PROJECT_DIR$/.idea/modules/api-gateway/itmo_highload_systems.api-gateway.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/catalog-service/itmo_highload_systems.catalog-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/catalog-service/itmo_highload_systems.catalog-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/config-server/itmo_highload_systems.config-server.main.iml" filepath="$PROJECT_DIR$/.idea/modules/config-server/itmo_highload_systems.config-server.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/order-service/itmo_highload_systems.order-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/order-service/itmo_highload_systems.order-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/pricing-service/itmo_highload_systems.pricing-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/pricing-service/itmo_highload_systems.pricing-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/service-discovery/itmo_highload_systems.service-discovery.main.iml" filepath="$PROJECT_DIR$/.idea/modules/service-discovery/itmo_highload_systems.service-discovery.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tobacco-shop-communication-lib/itmo_highload_systems.tobacco-shop-communication-lib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/tobacco-shop-communication-lib/itmo_highload_systems.tobacco-shop-communication-lib.main.iml" />
     </modules>
   </component>
 </project>

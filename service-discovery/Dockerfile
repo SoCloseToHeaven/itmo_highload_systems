@@ -1,9 +1,5 @@
-FROM gradle:8.4-jdk17 AS build
-COPY --chown=gradle:gradle . /src
-WORKDIR /src
-RUN gradle --no-daemon build --parallel
-
 FROM amazoncorretto:17
 WORKDIR /
-COPY --from=build /src/build/libs/*.jar /highload.jar
-ENTRYPOINT ["java","-jar","highload.jar"]
+# Копируем готовый JAR файл из контекста сборки
+COPY build/libs/*.jar /service-discovery.jar
+ENTRYPOINT ["java","-jar","service-discovery.jar"]

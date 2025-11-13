@@ -36,7 +36,8 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.3.0'
     implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
     implementation 'io.github.resilience4j:resilience4j-feign:2.1.0'
-    runtimeOnly 'io.r2dbc:r2dbc-postgresql'
+    // https://mvnrepository.com/artifact/io.r2dbc/r2dbc-postgresql
+    implementation("io.r2dbc:r2dbc-postgresql:0.8.12.RELEASE")
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 }

@@ -8,6 +8,18 @@
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.42/8365263844ebb62398e0dc33057ba10ba472d3b8/lombok-1.18.42.jar" />
         </processorPath>
         <module name="itmo_highload_systems.order-service.main" />
+        <module name="itmo_highload_systems.service-discovery.test" />
+        <module name="itmo_highload_systems.config-server.main" />
+        <module name="itmo_highload_systems.catalog-service.main" />
+        <module name="itmo_highload_systems.tobacco-shop-communication-lib.main" />
+        <module name="itmo_highload_systems.service-discovery.main" />
+        <module name="itmo_highload_systems.tobacco-shop-communication-lib.test" />
+        <module name="itmo_highload_systems.config-server.test" />
+        <module name="itmo_highload_systems.api-gateway.main" />
+        <module name="itmo_highload_systems.pricing-service.test" />
+        <module name="itmo_highload_systems.catalog-service.test" />
+        <module name="itmo_highload_systems.api-gateway.test" />
+        <module name="itmo_highload_systems.order-service.test" />
         <module name="itmo_highload_systems.pricing-service.main" />
       </profile>
     </annotationProcessing>
