@@ -19,7 +19,6 @@ public class PriceServiceImpl implements PriceService {
     @Override
     @Transactional
     public PriceResponse createPrice(PriceCreateRequest request) {
-        // Используем ProductService для проверки существования продукта
         try {
             productService.getProductById(request.getProductId());
         } catch (RuntimeException e) {
