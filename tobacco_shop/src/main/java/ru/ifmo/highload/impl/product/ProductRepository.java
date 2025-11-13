@@ -12,7 +12,6 @@ import java.util.Optional;
 @Repository
 interface ProductRepository extends JpaRepository<Product, Long> {
 
-    // Исправленный метод для поиска по категории через junction table
     @Query("SELECT p FROM Product p JOIN ProductCategory pc ON p.id = pc.productId WHERE pc.categoryId = :categoryId")
     Page<Product> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
 

@@ -25,14 +25,12 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     @Transactional
     public DiscountResponse createDiscount(DiscountCreateRequest request) {
-        // Используем ProductService для проверки существования продукта
         try {
             productService.getProductById(request.getProductId());
         } catch (RuntimeException e) {
             throw new RuntimeException("Product not found with id: " + request.getProductId());
         }
 
-        // Используем PriceService для проверки существования цены
         try {
             priceService.getCurrentPriceForProduct(request.getProductId());
         } catch (RuntimeException e) {

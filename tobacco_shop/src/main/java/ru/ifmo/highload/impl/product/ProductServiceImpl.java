@@ -27,7 +27,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
-        // Используем CategoryService для проверки существования категории
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
@@ -73,7 +72,6 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-        // Используем CategoryService для проверки существования категории
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
@@ -99,7 +97,6 @@ public class ProductServiceImpl implements ProductService {
             throw new RuntimeException("Product not found with id: " + productId);
         }
 
-        // Используем CategoryService для проверки существования категории
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
@@ -114,7 +111,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductResponse toProductResponse(Product product) {
-//        // Используем PriceService для получения текущей цены
 //        Integer currentPrice;
 //        try {
 //            currentPrice = priceService.getCurrentPriceForProduct(product.getId());
