@@ -71,7 +71,6 @@ class CategoryServiceImpl implements CategoryService {
             }
         }
 
-        // Проверяем уникальность имени
         if (!request.getName().equals(category.getName())) {
             if (categoryRepository.existsByNameAndParentCategoryId(request.getName(), request.getParentCategoryId())) {
                 throw new RuntimeException("Category with this name already exists in the parent category");
@@ -116,7 +115,6 @@ class CategoryServiceImpl implements CategoryService {
     }
 
     private boolean isCircularDependency(Long categoryId, Long potentialParentId) {
-        // Простая проверка на циклическую зависимость
         if (categoryId.equals(potentialParentId)) {
             return true;
         }
