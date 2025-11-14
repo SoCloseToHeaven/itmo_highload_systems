@@ -50,6 +50,8 @@ class DiscountServiceIntegrationTest extends TestcontainersConfiguration {
 
         DiscountUpdateRequest updateRequest = new DiscountUpdateRequest();
         updateRequest.setActualPriceId(2L);
+        updateRequest.setStartDate(LocalDateTime.now().plusDays(1));
+        updateRequest.setEndDate(LocalDateTime.now().plusDays(10));
 
         DiscountResponse updateResult = discountService.updateDiscount(createResult.getId(), updateRequest);
 
