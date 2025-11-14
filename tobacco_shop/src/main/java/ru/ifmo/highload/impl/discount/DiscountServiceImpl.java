@@ -57,7 +57,8 @@ public class DiscountServiceImpl implements DiscountService {
         Discount discount = discountRepository.findById(discountId)
                 .orElseThrow(() -> new RuntimeException("Discount not found with id: " + discountId));
 
-        if (request.getEndDate().isBefore(request.getStartDate())) {
+        if (request.getEndDate() != null && request.getStartDate() != null
+                && request.getEndDate().isBefore(request.getStartDate())) {
             throw new RuntimeException("End date must be after start date");
         }
 
