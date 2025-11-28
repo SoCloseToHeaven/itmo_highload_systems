@@ -9,6 +9,8 @@ import ru.ifmo.highload.api.CategoryService;
 import ru.ifmo.highload.dto.category.CategoryCreateRequest;
 import ru.ifmo.highload.dto.category.CategoryResponse;
 import ru.ifmo.highload.dto.category.CategoryUpdateRequest;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найдена категория с id: " + id));
         return toCategoryResponse(category);
     }
 
@@ -36,13 +38,13 @@ class CategoryServiceImpl implements CategoryService {
     public CategoryResponse createCategory(CategoryCreateRequest request) {
         if (request.getParentCategoryId() != null) {
             if (!categoryRepository.existsById(request.getParentCategoryId())) {
-                throw new RuntimeException("Parent category not found with id: " + request.getParentCategoryId());
+                throw new ResourceNotFoundException("Не найдена родительская категория с id: " + request.getParentCategoryId());
             }
         }
 
         // Проверяем уникальность имени в рамках родительской категории
         if (categoryRepository.existsByNameAndParentCategoryId(request.getName(), request.getParentCategoryId())) {
-            throw new RuntimeException("Category with this name already exists in the parent category");
+            throw new BadRequestException("Категория с этим именем уже существует у родителя");
         }
 
         Category category = new Category();
@@ -57,23 +59,23 @@ class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryResponse updateCategory(Long id, CategoryUpdateRequest request) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найдена категория с id: " + id));
 
         if (request.getParentCategoryId() != null &&
                 !request.getParentCategoryId().equals(category.getParentCategoryId())) {
             if (!categoryRepository.existsById(request.getParentCategoryId())) {
-                throw new RuntimeException("Parent category not found with id: " + request.getParentCategoryId());
+                throw new ResourceNotFoundException("Не найдена родительская категория с id: " + request.getParentCategoryId());
             }
 
             // Проверяем, не создаем ли циклическую зависимость
             if (isCircularDependency(id, request.getParentCategoryId())) {
-                throw new RuntimeException("Circular dependency detected");
+                throw new BadRequestException("Циклическая зависимость недопустима");
             }
         }
 
         if (!request.getName().equals(category.getName())) {
             if (categoryRepository.existsByNameAndParentCategoryId(request.getName(), request.getParentCategoryId())) {
-                throw new RuntimeException("Category with this name already exists in the parent category");
+                throw new BadRequestException("Категория с этим именем уже существует у родителя");
             }
         }
 
@@ -88,12 +90,12 @@ class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void deleteCategory(Long id) {
         if (!categoryRepository.existsById(id)) {
-            throw new RuntimeException("Category not found with id: " + id);
+            throw new ResourceNotFoundException("Не найдена категория с id: " + id);
         }
 
         boolean hasChildren = !categoryRepository.findByParentCategoryId(id).isEmpty();
         if (hasChildren) {
-            throw new RuntimeException("Cannot delete category with child categories");
+            throw new BadRequestException("Нельзя удалить категорию с дочерними категориями");
         }
 
         categoryRepository.deleteById(id);

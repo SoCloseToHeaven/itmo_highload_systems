@@ -6,11 +6,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.CategoryService;
-import ru.ifmo.highload.api.PriceService;
 import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.category.CategoryResponse;
 import ru.ifmo.highload.dto.product.ProductResponse;
 import ru.ifmo.highload.dto.product.ProductUpdateRequest;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +31,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
-            throw new RuntimeException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException("Не найдена категория с id: " + categoryId);
         }
 
         return productRepository.findByCategoryId(categoryId, pageable)
@@ -41,7 +42,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден продукт с id: " + id));
         return toProductResponse(product);
     }
 
@@ -49,7 +50,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse updateProduct(Long id, ProductUpdateRequest request) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден продукт с id: " + id));
 
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -70,16 +71,16 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse addProductToCategory(Long productId, Long categoryId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден продукт с id: " + productId));
 
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
-            throw new RuntimeException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException("Не найдена категория с id: " + categoryId);
         }
 
         if (productCategoryRepository.existsByProductIdAndCategoryId(productId, categoryId)) {
-            throw new RuntimeException("Product already in this category");
+            throw new BadRequestException("Продукт уже находится в категории");
         }
 
         ProductCategory productCategory = new ProductCategory();
@@ -94,19 +95,19 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse removeProductFromCategory(Long productId, Long categoryId) {
         if (!productRepository.existsById(productId)) {
-            throw new RuntimeException("Product not found with id: " + productId);
+            throw new ResourceNotFoundException("Не найден продукт с id: " + productId);
         }
 
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
-            throw new RuntimeException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException("Не найдена категория с id: " + categoryId);
         }
 
         productCategoryRepository.deleteByProductIdAndCategoryId(productId, categoryId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден продукт с id: " + productId));
         return toProductResponse(product);
     }
 

@@ -2,16 +2,16 @@ package ru.ifmo.highload.impl.discount;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Repository
 interface DiscountRepository extends JpaRepository<Discount, Long> {
 
     List<Discount> findByProductIdAndStartDateBeforeAndEndDateAfter(
-            Long productId, LocalDateTime date, LocalDateTime date2);
+            Long productId, ZonedDateTime date, ZonedDateTime date2);
 
-    List<Discount> findByEndDateAfter(LocalDateTime date);
+    List<Discount> findByEndDateAfter(ZonedDateTime date);
 
-    List<Discount> findByStartDateBeforeAndEndDateAfter(LocalDateTime start, LocalDateTime end);
+    List<Discount> findByStartDateBeforeAndEndDateAfter(ZonedDateTime start, ZonedDateTime end);
 }

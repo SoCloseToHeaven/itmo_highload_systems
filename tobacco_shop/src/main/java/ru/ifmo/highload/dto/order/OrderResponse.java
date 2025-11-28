@@ -2,7 +2,7 @@ package ru.ifmo.highload.dto.order;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Data
@@ -19,7 +19,7 @@ public class OrderResponse {
     private OrderStatus status;
 
     @Schema(description = "Дата создания заказа", example = "2024-01-01T12:00:00")
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     @Schema(description = "Список товаров в заказе")
     private List<OrderItemResponse> items;

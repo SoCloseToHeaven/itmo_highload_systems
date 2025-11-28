@@ -14,6 +14,8 @@ import ru.ifmo.highload.api.PriceService;
 import ru.ifmo.highload.dto.category.CategoryResponse;
 import ru.ifmo.highload.dto.product.ProductResponse;
 import ru.ifmo.highload.dto.product.ProductUpdateRequest;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -75,9 +77,9 @@ class ProductServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         when(categoryService.getCategoryById(categoryId))
-                .thenThrow(new RuntimeException("Category not found"));
+                .thenThrow(new ResourceNotFoundException("Category not found"));
 
-        assertThrows(RuntimeException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> productService.getProductsByCategory(categoryId, pageable));
         verify(productRepository, never()).findByCategoryId(anyLong(), any(Pageable.class));
     }
@@ -109,7 +111,7 @@ class ProductServiceImplTest {
         Long productId = 999L;
         when(productRepository.findById(productId)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> productService.getProductById(productId));
+        assertThrows(ResourceNotFoundException.class, () -> productService.getProductById(productId));
         verify(productRepository, times(1)).findById(productId);
     }
 
@@ -210,7 +212,7 @@ class ProductServiceImplTest {
         when(categoryService.getCategoryById(categoryId)).thenReturn(new CategoryResponse());
         when(productCategoryRepository.existsByProductIdAndCategoryId(productId, categoryId)).thenReturn(true);
 
-        assertThrows(RuntimeException.class,
+        assertThrows(BadRequestException.class,
                 () -> productService.addProductToCategory(productId, categoryId));
         verify(productCategoryRepository, never()).save(any(ProductCategory.class));
     }

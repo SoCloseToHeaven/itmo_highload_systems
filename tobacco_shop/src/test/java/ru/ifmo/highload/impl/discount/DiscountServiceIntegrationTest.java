@@ -9,7 +9,7 @@ import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,8 +26,8 @@ class DiscountServiceIntegrationTest extends TestcontainersConfiguration {
         DiscountCreateRequest request = new DiscountCreateRequest();
         request.setProductId(1L);
         request.setActualPriceId(1L);
-        request.setStartDate(LocalDateTime.now().plusDays(1));
-        request.setEndDate(LocalDateTime.now().plusDays(10));
+        request.setStartDate(ZonedDateTime.now().plusDays(1));
+        request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         DiscountResponse result = discountService.createDiscount(request);
 
@@ -43,15 +43,15 @@ class DiscountServiceIntegrationTest extends TestcontainersConfiguration {
         DiscountCreateRequest createRequest = new DiscountCreateRequest();
         createRequest.setProductId(1L);
         createRequest.setActualPriceId(1L);
-        createRequest.setStartDate(LocalDateTime.now().plusDays(1));
-        createRequest.setEndDate(LocalDateTime.now().plusDays(10));
+        createRequest.setStartDate(ZonedDateTime.now().plusDays(1));
+        createRequest.setEndDate(ZonedDateTime.now().plusDays(10));
 
         DiscountResponse createResult = discountService.createDiscount(createRequest);
 
         DiscountUpdateRequest updateRequest = new DiscountUpdateRequest();
         updateRequest.setActualPriceId(2L);
-        updateRequest.setStartDate(LocalDateTime.now().plusDays(1));
-        updateRequest.setEndDate(LocalDateTime.now().plusDays(10));
+        updateRequest.setStartDate(ZonedDateTime.now().plusDays(1));
+        updateRequest.setEndDate(ZonedDateTime.now().plusDays(10));
 
         DiscountResponse updateResult = discountService.updateDiscount(createResult.getId(), updateRequest);
 
@@ -67,8 +67,8 @@ class DiscountServiceIntegrationTest extends TestcontainersConfiguration {
         DiscountCreateRequest createRequest = new DiscountCreateRequest();
         createRequest.setProductId(1L);
         createRequest.setActualPriceId(1L);
-        createRequest.setStartDate(LocalDateTime.now().minusDays(1));
-        createRequest.setEndDate(LocalDateTime.now().plusDays(10));
+        createRequest.setStartDate(ZonedDateTime.now().minusDays(1));
+        createRequest.setEndDate(ZonedDateTime.now().plusDays(10));
         DiscountResponse createResult = discountService.createDiscount(createRequest);
 
         discountService.deleteDiscount(createResult.getId());
@@ -85,14 +85,14 @@ class DiscountServiceIntegrationTest extends TestcontainersConfiguration {
         DiscountCreateRequest createRequest = new DiscountCreateRequest();
         createRequest.setProductId(1L);
         createRequest.setActualPriceId(1L);
-        createRequest.setStartDate(LocalDateTime.now().minusDays(1));
-        createRequest.setEndDate(LocalDateTime.now().plusDays(10));
+        createRequest.setStartDate(ZonedDateTime.now().minusDays(1));
+        createRequest.setEndDate(ZonedDateTime.now().plusDays(10));
         discountService.createDiscount(createRequest);
 
         createRequest.setProductId(2L);
         createRequest.setActualPriceId(2L);
-        createRequest.setStartDate(LocalDateTime.now().minusDays(2));
-        createRequest.setEndDate(LocalDateTime.now().plusDays(30));
+        createRequest.setStartDate(ZonedDateTime.now().minusDays(2));
+        createRequest.setEndDate(ZonedDateTime.now().plusDays(30));
         discountService.createDiscount(createRequest);
 
         List<DiscountResponse> getResult = discountService.getActiveDiscounts();
@@ -110,14 +110,14 @@ class DiscountServiceIntegrationTest extends TestcontainersConfiguration {
         DiscountCreateRequest createRequest = new DiscountCreateRequest();
         createRequest.setProductId(1L);
         createRequest.setActualPriceId(1L);
-        createRequest.setStartDate(LocalDateTime.now().minusDays(10));
-        createRequest.setEndDate(LocalDateTime.now().minusDays(1));
+        createRequest.setStartDate(ZonedDateTime.now().minusDays(10));
+        createRequest.setEndDate(ZonedDateTime.now().minusDays(1));
         discountService.createDiscount(createRequest);
 
         createRequest.setProductId(2L);
         createRequest.setActualPriceId(2L);
-        createRequest.setStartDate(LocalDateTime.now().plusDays(2));
-        createRequest.setEndDate(LocalDateTime.now().plusDays(30));
+        createRequest.setStartDate(ZonedDateTime.now().plusDays(2));
+        createRequest.setEndDate(ZonedDateTime.now().plusDays(30));
         discountService.createDiscount(createRequest);
 
         List<DiscountResponse> getResult = discountService.getActiveDiscounts();
