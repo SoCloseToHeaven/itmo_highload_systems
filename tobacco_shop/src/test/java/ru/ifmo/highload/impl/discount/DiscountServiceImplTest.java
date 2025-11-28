@@ -13,7 +13,7 @@ import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
 import ru.ifmo.highload.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,8 +42,8 @@ class DiscountServiceImplTest {
         DiscountCreateRequest request = new DiscountCreateRequest();
         request.setProductId(1L);
         request.setActualPriceId(1L);
-        request.setStartDate(LocalDateTime.now().plusDays(1));
-        request.setEndDate(LocalDateTime.now().plusDays(10));
+        request.setStartDate(ZonedDateTime.now().plusDays(1));
+        request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         Discount savedDiscount = new Discount();
         savedDiscount.setId(1L);
@@ -71,8 +71,8 @@ class DiscountServiceImplTest {
         DiscountCreateRequest request = new DiscountCreateRequest();
         request.setProductId(1L);
         request.setActualPriceId(1L);
-        request.setStartDate(LocalDateTime.now().plusDays(10));
-        request.setEndDate(LocalDateTime.now().plusDays(1)); // Конечная дата раньше начальной
+        request.setStartDate(ZonedDateTime.now().plusDays(10));
+        request.setEndDate(ZonedDateTime.now().plusDays(1)); // Конечная дата раньше начальной
 
         when(productService.getProductById(1L)).thenReturn(null);
         when(priceService.getCurrentPriceForProduct(1L)).thenReturn(45000);
@@ -90,8 +90,8 @@ class DiscountServiceImplTest {
         DiscountCreateRequest request = new DiscountCreateRequest();
         request.setProductId(999L);
         request.setActualPriceId(1L);
-        request.setStartDate(LocalDateTime.now().plusDays(1));
-        request.setEndDate(LocalDateTime.now().plusDays(10));
+        request.setStartDate(ZonedDateTime.now().plusDays(1));
+        request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         when(productService.getProductById(999L))
                 .thenThrow(new ResourceNotFoundException("Product not found"));
@@ -105,16 +105,16 @@ class DiscountServiceImplTest {
         // Сценарий: Обновление существующей скидки
         Long discountId = 1L;
         DiscountUpdateRequest request = new DiscountUpdateRequest();
-        request.setStartDate(LocalDateTime.now().plusDays(2));
-        request.setEndDate(LocalDateTime.now().plusDays(12));
+        request.setStartDate(ZonedDateTime.now().plusDays(2));
+        request.setEndDate(ZonedDateTime.now().plusDays(12));
         request.setActualPriceId(2L);
 
         Discount existingDiscount = new Discount();
         existingDiscount.setId(discountId);
         existingDiscount.setProductId(1L);
         existingDiscount.setActualPriceId(1L);
-        existingDiscount.setStartDate(LocalDateTime.now().plusDays(1));
-        existingDiscount.setEndDate(LocalDateTime.now().plusDays(10));
+        existingDiscount.setStartDate(ZonedDateTime.now().plusDays(1));
+        existingDiscount.setEndDate(ZonedDateTime.now().plusDays(10));
 
         Discount updatedDiscount = new Discount();
         updatedDiscount.setId(discountId);
@@ -140,8 +140,8 @@ class DiscountServiceImplTest {
         // Сценарий: Попытка обновления несуществующей скидки
         Long discountId = 999L;
         DiscountUpdateRequest request = new DiscountUpdateRequest();
-        request.setStartDate(LocalDateTime.now().plusDays(1));
-        request.setEndDate(LocalDateTime.now().plusDays(10));
+        request.setStartDate(ZonedDateTime.now().plusDays(1));
+        request.setEndDate(ZonedDateTime.now().plusDays(10));
         request.setActualPriceId(1L);
 
         when(discountRepository.findById(discountId)).thenReturn(Optional.empty());
@@ -158,8 +158,8 @@ class DiscountServiceImplTest {
         // Сценарий: Попытка обновления скидки с невалидным диапазоном дат
         Long discountId = 1L;
         DiscountUpdateRequest request = new DiscountUpdateRequest();
-        request.setStartDate(LocalDateTime.now().plusDays(10));
-        request.setEndDate(LocalDateTime.now().plusDays(1)); // Конечная дата раньше начальной
+        request.setStartDate(ZonedDateTime.now().plusDays(10));
+        request.setEndDate(ZonedDateTime.now().plusDays(1)); // Конечная дата раньше начальной
         request.setActualPriceId(1L);
 
         Discount existingDiscount = new Discount();
@@ -204,7 +204,7 @@ class DiscountServiceImplTest {
     @Test
     void getActiveDiscounts_WhenActiveDiscountsExist_ShouldReturnActiveDiscounts() {
         // Сценарий: Получение активных скидок
-        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now();
         Discount activeDiscount1 = new Discount();
         activeDiscount1.setId(1L);
         activeDiscount1.setProductId(1L);
@@ -221,7 +221,7 @@ class DiscountServiceImplTest {
 
         List<Discount> activeDiscounts = List.of(activeDiscount1, activeDiscount2);
 
-        when(discountRepository.findByStartDateBeforeAndEndDateAfter(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(discountRepository.findByStartDateBeforeAndEndDateAfter(any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(activeDiscounts);
 
         List<DiscountResponse> result = discountService.getActiveDiscounts();
@@ -230,28 +230,28 @@ class DiscountServiceImplTest {
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(d -> d.getId().equals(1L)));
         assertTrue(result.stream().anyMatch(d -> d.getId().equals(2L)));
-        verify(discountRepository, times(1)).findByStartDateBeforeAndEndDateAfter(any(LocalDateTime.class), any(LocalDateTime.class));
+        verify(discountRepository, times(1)).findByStartDateBeforeAndEndDateAfter(any(ZonedDateTime.class), any(ZonedDateTime.class));
     }
 
     @Test
     void getActiveDiscounts_WhenNoActiveDiscounts_ShouldReturnEmptyList() {
         // Сценарий: Получение активных скидок когда их нет
-        when(discountRepository.findByStartDateBeforeAndEndDateAfter(any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(discountRepository.findByStartDateBeforeAndEndDateAfter(any(ZonedDateTime.class), any(ZonedDateTime.class)))
                 .thenReturn(List.of());
 
         List<DiscountResponse> result = discountService.getActiveDiscounts();
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(discountRepository, times(1)).findByStartDateBeforeAndEndDateAfter(any(LocalDateTime.class), any(LocalDateTime.class));
+        verify(discountRepository, times(1)).findByStartDateBeforeAndEndDateAfter(any(ZonedDateTime.class), any(ZonedDateTime.class));
     }
 
     @Test
     void isActive_WhenDiscountIsActive_ShouldReturnTrue() {
         // Сценарий: Проверка активности скидки (вспомогательный метод)
         Discount discount = new Discount();
-        discount.setStartDate(LocalDateTime.now().minusDays(1));
-        discount.setEndDate(LocalDateTime.now().plusDays(1));
+        discount.setStartDate(ZonedDateTime.now().minusDays(1));
+        discount.setEndDate(ZonedDateTime.now().plusDays(1));
 
         assertTrue(discount.isActive());
     }
@@ -260,8 +260,8 @@ class DiscountServiceImplTest {
     void isActive_WhenDiscountIsNotStarted_ShouldReturnFalse() {
         // Сценарий: Проверка активности скидки которая еще не началась
         Discount discount = new Discount();
-        discount.setStartDate(LocalDateTime.now().plusDays(1));
-        discount.setEndDate(LocalDateTime.now().plusDays(2));
+        discount.setStartDate(ZonedDateTime.now().plusDays(1));
+        discount.setEndDate(ZonedDateTime.now().plusDays(2));
 
         assertFalse(discount.isActive());
     }
@@ -270,8 +270,8 @@ class DiscountServiceImplTest {
     void isActive_WhenDiscountIsExpired_ShouldReturnFalse() {
         // Сценарий: Проверка активности скидки которая уже истекла
         Discount discount = new Discount();
-        discount.setStartDate(LocalDateTime.now().minusDays(2));
-        discount.setEndDate(LocalDateTime.now().minusDays(1));
+        discount.setStartDate(ZonedDateTime.now().minusDays(2));
+        discount.setEndDate(ZonedDateTime.now().minusDays(1));
 
         assertFalse(discount.isActive());
     }

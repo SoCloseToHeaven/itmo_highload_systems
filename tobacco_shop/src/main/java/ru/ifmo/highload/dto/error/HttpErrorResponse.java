@@ -3,7 +3,7 @@ package ru.ifmo.highload.dto.error;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 @Schema(description = "Ответ с информацией об ошибке")
@@ -18,5 +18,5 @@ public class HttpErrorResponse {
     private String error;
 
     @Schema(description = "Время ошибки", example = "2024-01-01T00:00:00")
-    private LocalDateTime timestamp;
+    private ZonedDateTime timestamp;
 }

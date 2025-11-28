@@ -12,7 +12,7 @@ import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
 import ru.ifmo.highload.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,7 +83,7 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     @Transactional(readOnly = true)
     public List<DiscountResponse> getActiveDiscounts() {
-        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now();
         return discountRepository.findByStartDateBeforeAndEndDateAfter(now, now)
                 .stream()
                 .map(this::toDiscountResponse)

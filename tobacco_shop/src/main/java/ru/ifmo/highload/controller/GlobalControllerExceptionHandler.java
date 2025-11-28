@@ -12,7 +12,7 @@ import ru.ifmo.highload.dto.error.HttpErrorResponse;
 import ru.ifmo.highload.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @ControllerAdvice
 public class GlobalControllerExceptionHandler {
@@ -26,7 +26,7 @@ public class GlobalControllerExceptionHandler {
         response.setError(ex.getMessage());
         response.setStatus(HttpStatus.NOT_FOUND.value());
         response.setPath(req.getRequestURI());
-        response.setTimestamp(LocalDateTime.now());
+        response.setTimestamp(ZonedDateTime.now());
         return response;
     }
 
@@ -39,7 +39,7 @@ public class GlobalControllerExceptionHandler {
         response.setError(ex.getMessage());
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setPath(req.getRequestURI());
-        response.setTimestamp(LocalDateTime.now());
+        response.setTimestamp(ZonedDateTime.now());
         return response;
     }
 
@@ -59,7 +59,7 @@ public class GlobalControllerExceptionHandler {
         response.setError(error);
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setPath(req.getRequestURI());
-        response.setTimestamp(LocalDateTime.now());
+        response.setTimestamp(ZonedDateTime.now());
         return response;
     }
 }
