@@ -9,6 +9,8 @@ import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 import java.util.Optional;
 
@@ -61,7 +63,7 @@ class PriceServiceImplTest {
 
         when(actualPriceRepository.existsByProductId(1L)).thenReturn(true);
 
-        assertThrows(RuntimeException.class, () -> priceService.createPrice(request));
+        assertThrows(BadRequestException.class, () -> priceService.createPrice(request));
         verify(actualPriceRepository, never()).save(any(ActualPrice.class));
     }
 
@@ -116,7 +118,7 @@ class PriceServiceImplTest {
         Long productId = 999L;
         when(actualPriceRepository.findByProductId(productId)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> priceService.getCurrentPriceForProduct(productId));
+        assertThrows(ResourceNotFoundException.class, () -> priceService.getCurrentPriceForProduct(productId));
         verify(actualPriceRepository, times(1)).findByProductId(productId);
     }
 

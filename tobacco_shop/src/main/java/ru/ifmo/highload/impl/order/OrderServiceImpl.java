@@ -11,6 +11,8 @@ import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.order.*;
 import ru.ifmo.highload.dto.product.ProductResponse;
 import ru.ifmo.highload.dto.product.ProductUpdateRequest;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +31,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
         if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new RuntimeException("Order must contain at least one item");
+            throw new BadRequestException("Order must contain at least one item");
         }
 
         Order order = new Order();
@@ -45,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
             ProductResponse productResponse = productService.getProductById(item.getProductId());
 
             if (productResponse.getStockQuantity() < item.getQuantity()) {
-                throw new RuntimeException("Insufficient stock for product: " + productResponse.getName());
+                throw new BadRequestException("Insufficient stock for product: " + productResponse.getName());
             }
 
             Integer currentPrice = priceService.getCurrentPriceForProduct(item.getProductId());
@@ -82,7 +84,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
         return toOrderResponse(order);
     }
 
@@ -90,10 +92,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse updateOrderStatus(Long id, OrderStatus status) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
 
         if (status == OrderStatus.CANCELLED) {
-            throw new RuntimeException("Order cannot be cancelled in current status: " + order.getStatus());
+            throw new BadRequestException("Order cannot be cancelled in current status: " + order.getStatus());
         }
 
         order.setStatus(status);

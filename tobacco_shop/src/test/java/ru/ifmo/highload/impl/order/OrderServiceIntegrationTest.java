@@ -9,6 +9,7 @@ import ru.ifmo.highload.dto.order.OrderCreateRequest;
 import ru.ifmo.highload.dto.order.OrderItemRequest;
 import ru.ifmo.highload.dto.order.OrderResponse;
 import ru.ifmo.highload.dto.order.OrderStatus;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
 
 import java.util.List;
 
@@ -51,7 +52,7 @@ class OrderServiceIntegrationTest extends TestcontainersConfiguration {
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(List.of(item));
 
-        assertThrows(RuntimeException.class, () -> orderService.createOrder(request));
+        assertThrows(BadRequestException.class, () -> orderService.createOrder(request));
     }
 
     @Test

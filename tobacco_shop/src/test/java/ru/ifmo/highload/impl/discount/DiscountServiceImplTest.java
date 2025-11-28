@@ -10,6 +10,8 @@ import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -75,7 +77,7 @@ class DiscountServiceImplTest {
         when(productService.getProductById(1L)).thenReturn(null);
         when(priceService.getCurrentPriceForProduct(1L)).thenReturn(45000);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> discountService.createDiscount(request));
 
         assertEquals("End date must be after start date", exception.getMessage());
@@ -92,9 +94,9 @@ class DiscountServiceImplTest {
         request.setEndDate(LocalDateTime.now().plusDays(10));
 
         when(productService.getProductById(999L))
-                .thenThrow(new RuntimeException("Product not found"));
+                .thenThrow(new ResourceNotFoundException("Product not found"));
 
-        assertThrows(RuntimeException.class, () -> discountService.createDiscount(request));
+        assertThrows(ResourceNotFoundException.class, () -> discountService.createDiscount(request));
         verify(discountRepository, never()).save(any(Discount.class));
     }
 
@@ -144,7 +146,7 @@ class DiscountServiceImplTest {
 
         when(discountRepository.findById(discountId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> discountService.updateDiscount(discountId, request));
 
         assertEquals("Discount not found with id: 999", exception.getMessage());
@@ -165,7 +167,7 @@ class DiscountServiceImplTest {
 
         when(discountRepository.findById(discountId)).thenReturn(Optional.of(existingDiscount));
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> discountService.updateDiscount(discountId, request));
 
         assertEquals("End date must be after start date", exception.getMessage());
@@ -192,7 +194,7 @@ class DiscountServiceImplTest {
 
         when(discountRepository.existsById(discountId)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> discountService.deleteDiscount(discountId));
 
         assertEquals("Discount not found with id: 999", exception.getMessage());

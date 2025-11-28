@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import ru.ifmo.highload.dto.category.CategoryCreateRequest;
 import ru.ifmo.highload.dto.category.CategoryResponse;
 import ru.ifmo.highload.dto.category.CategoryUpdateRequest;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -72,7 +74,7 @@ class CategoryServiceImplTest {
         Long categoryId = 999L;
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.getCategoryById(categoryId));
 
         assertEquals("Category not found with id: 999", exception.getMessage());
@@ -90,7 +92,8 @@ class CategoryServiceImplTest {
         savedCategory.setId(1L);
         savedCategory.setName("Новая категория");
 
-        when(categoryRepository.existsByNameAndParentCategoryId("Новая категория", null)).thenReturn(false);
+        when(categoryRepository.existsByNameAndParentCategoryId("Новая категория", null))
+                .thenReturn(false);
         when(categoryRepository.save(any(Category.class))).thenReturn(savedCategory);
 
         CategoryResponse result = categoryService.createCategory(request);
@@ -109,9 +112,10 @@ class CategoryServiceImplTest {
         request.setName("Существующая категория");
         request.setParentCategoryId(null);
 
-        when(categoryRepository.existsByNameAndParentCategoryId("Существующая категория", null)).thenReturn(true);
+        when(categoryRepository.existsByNameAndParentCategoryId("Существующая категория", null))
+                .thenReturn(true);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> categoryService.createCategory(request));
 
         assertEquals("Category with this name already exists in the parent category", exception.getMessage());
@@ -128,7 +132,7 @@ class CategoryServiceImplTest {
         // из-за исключения при проверке existsById
         when(categoryRepository.existsById(999L)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.createCategory(request));
 
         assertEquals("Parent category not found with id: 999", exception.getMessage());
@@ -172,7 +176,7 @@ class CategoryServiceImplTest {
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.updateCategory(categoryId, request));
 
         assertEquals("Category not found with id: 999", exception.getMessage());
@@ -204,7 +208,7 @@ class CategoryServiceImplTest {
         when(categoryRepository.existsById(categoryId)).thenReturn(true);
         when(categoryRepository.findByParentCategoryId(categoryId)).thenReturn(List.of(childCategory));
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> categoryService.deleteCategory(categoryId));
 
         assertEquals("Cannot delete category with child categories", exception.getMessage());
@@ -217,7 +221,7 @@ class CategoryServiceImplTest {
         Long categoryId = 999L;
         when(categoryRepository.existsById(categoryId)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.deleteCategory(categoryId));
 
         assertEquals("Category not found with id: 999", exception.getMessage());

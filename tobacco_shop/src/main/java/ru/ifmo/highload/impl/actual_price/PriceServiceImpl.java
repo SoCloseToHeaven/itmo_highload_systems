@@ -8,6 +8,8 @@ import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +24,11 @@ public class PriceServiceImpl implements PriceService {
         try {
             productService.getProductById(request.getProductId());
         } catch (RuntimeException e) {
-            throw new RuntimeException("Product not found with id: " + request.getProductId());
+            throw new ResourceNotFoundException("Product not found with id: " + request.getProductId());
         }
 
         if (actualPriceRepository.existsByProductId(request.getProductId())) {
-            throw new RuntimeException("Price already exists for this product");
+            throw new BadRequestException("Price already exists for this product");
         }
 
         ActualPrice price = new ActualPrice();
@@ -41,7 +43,7 @@ public class PriceServiceImpl implements PriceService {
     @Transactional
     public PriceResponse updatePrice(Long priceId, PriceUpdateRequest request) {
         ActualPrice price = actualPriceRepository.findById(priceId)
-                .orElseThrow(() -> new RuntimeException("Price not found with id: " + priceId));
+                .orElseThrow(() -> new ResourceNotFoundException("Price not found with id: " + priceId));
 
         price.setPrice(request.getPrice());
 
@@ -53,7 +55,7 @@ public class PriceServiceImpl implements PriceService {
     @Transactional
     public PriceResponse updatePriceByProductId(Long productId, PriceUpdateRequest request) {
         ActualPrice price = actualPriceRepository.findByProductId(productId)
-                .orElseThrow(() -> new RuntimeException("Price not found for product with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Price not found for product with id: " + productId));
 
         price.setPrice(request.getPrice());
 
@@ -65,7 +67,7 @@ public class PriceServiceImpl implements PriceService {
     @Transactional
     public void deletePrice(Long priceId) {
         if (!actualPriceRepository.existsById(priceId)) {
-            throw new RuntimeException("Price not found with id: " + priceId);
+            throw new ResourceNotFoundException("Price not found with id: " + priceId);
         }
         actualPriceRepository.deleteById(priceId);
     }
@@ -81,7 +83,7 @@ public class PriceServiceImpl implements PriceService {
     public Integer getCurrentPriceForProduct(Long productId) {
         return actualPriceRepository.findByProductId(productId)
                 .map(ActualPrice::getPrice)
-                .orElseThrow(() -> new RuntimeException("Price not found for product with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Price not found for product with id: " + productId));
     }
 
     private PriceResponse toPriceResponse(ActualPrice price) {
