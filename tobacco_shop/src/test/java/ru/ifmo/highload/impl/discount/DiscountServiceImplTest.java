@@ -80,7 +80,7 @@ class DiscountServiceImplTest {
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> discountService.createDiscount(request));
 
-        assertEquals("End date must be after start date", exception.getMessage());
+        assertEquals("Дата конца должна быть позже даты начала", exception.getMessage());
         verify(discountRepository, never()).save(any(Discount.class));
     }
 
@@ -149,7 +149,7 @@ class DiscountServiceImplTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> discountService.updateDiscount(discountId, request));
 
-        assertEquals("Discount not found with id: 999", exception.getMessage());
+        assertEquals("Не найдена скидка с id: 999", exception.getMessage());
         verify(discountRepository, never()).save(any(Discount.class));
     }
 
@@ -170,7 +170,7 @@ class DiscountServiceImplTest {
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> discountService.updateDiscount(discountId, request));
 
-        assertEquals("End date must be after start date", exception.getMessage());
+        assertEquals("Дата конца должна быть позже даты начала", exception.getMessage());
         verify(discountRepository, never()).save(any(Discount.class));
     }
 
@@ -197,7 +197,7 @@ class DiscountServiceImplTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> discountService.deleteDiscount(discountId));
 
-        assertEquals("Discount not found with id: 999", exception.getMessage());
+        assertEquals("Не найдена скидка с id: 999", exception.getMessage());
         verify(discountRepository, never()).deleteById(discountId);
     }
 

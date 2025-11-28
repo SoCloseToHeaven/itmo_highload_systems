@@ -31,7 +31,7 @@ public class ProductServiceImpl implements ProductService {
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
-            throw new ResourceNotFoundException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException("Не найдена категория с id: " + categoryId);
         }
 
         return productRepository.findByCategoryId(categoryId, pageable)
@@ -42,7 +42,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден продукт с id: " + id));
         return toProductResponse(product);
     }
 
@@ -50,7 +50,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse updateProduct(Long id, ProductUpdateRequest request) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден продукт с id: " + id));
 
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -71,16 +71,16 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse addProductToCategory(Long productId, Long categoryId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден продукт с id: " + productId));
 
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
-            throw new ResourceNotFoundException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException("Не найдена категория с id: " + categoryId);
         }
 
         if (productCategoryRepository.existsByProductIdAndCategoryId(productId, categoryId)) {
-            throw new BadRequestException("Product already in this category");
+            throw new BadRequestException("Продукт уже находится в категории");
         }
 
         ProductCategory productCategory = new ProductCategory();
@@ -95,19 +95,19 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductResponse removeProductFromCategory(Long productId, Long categoryId) {
         if (!productRepository.existsById(productId)) {
-            throw new ResourceNotFoundException("Product not found with id: " + productId);
+            throw new ResourceNotFoundException("Не найден продукт с id: " + productId);
         }
 
         try {
             categoryService.getCategoryById(categoryId);
         } catch (RuntimeException e) {
-            throw new ResourceNotFoundException("Category not found with id: " + categoryId);
+            throw new ResourceNotFoundException("Не найдена категория с id: " + categoryId);
         }
 
         productCategoryRepository.deleteByProductIdAndCategoryId(productId, categoryId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден продукт с id: " + productId));
         return toProductResponse(product);
     }
 

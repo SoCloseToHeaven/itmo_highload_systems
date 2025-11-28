@@ -1,6 +1,7 @@
 package ru.ifmo.highload.controller.actual_price;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.api.PriceService;
@@ -17,7 +18,7 @@ public class PriceController implements PriceApi {
 
     @Override
     public ResponseEntity<PriceResponse> createPrice(PriceCreateRequest request) {
-        return ResponseEntity.ok(priceService.createPrice(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(priceService.createPrice(request));
     }
 
     @Override

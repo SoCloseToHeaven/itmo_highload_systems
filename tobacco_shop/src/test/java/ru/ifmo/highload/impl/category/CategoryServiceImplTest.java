@@ -77,7 +77,7 @@ class CategoryServiceImplTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.getCategoryById(categoryId));
 
-        assertEquals("Category not found with id: 999", exception.getMessage());
+        assertEquals("Не найдена категория с id: 999", exception.getMessage());
         verify(categoryRepository, times(1)).findById(categoryId);
     }
 
@@ -118,7 +118,7 @@ class CategoryServiceImplTest {
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> categoryService.createCategory(request));
 
-        assertEquals("Category with this name already exists in the parent category", exception.getMessage());
+        assertEquals("Категория с этим именем уже существует у родителя", exception.getMessage());
         verify(categoryRepository, never()).save(any(Category.class));
     }
 
@@ -135,7 +135,7 @@ class CategoryServiceImplTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.createCategory(request));
 
-        assertEquals("Parent category not found with id: 999", exception.getMessage());
+        assertEquals("Не найдена родительская категория с id: 999", exception.getMessage());
         verify(categoryRepository, never()).save(any(Category.class));
     }
 
@@ -179,7 +179,7 @@ class CategoryServiceImplTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.updateCategory(categoryId, request));
 
-        assertEquals("Category not found with id: 999", exception.getMessage());
+        assertEquals("Не найдена категория с id: 999", exception.getMessage());
         verify(categoryRepository, never()).save(any(Category.class));
     }
 
@@ -211,7 +211,7 @@ class CategoryServiceImplTest {
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> categoryService.deleteCategory(categoryId));
 
-        assertEquals("Cannot delete category with child categories", exception.getMessage());
+        assertEquals("Нельзя удалить категорию с дочерними категориями", exception.getMessage());
         verify(categoryRepository, never()).deleteById(categoryId);
     }
 
@@ -224,7 +224,7 @@ class CategoryServiceImplTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> categoryService.deleteCategory(categoryId));
 
-        assertEquals("Category not found with id: 999", exception.getMessage());
+        assertEquals("Не найдена категория с id: 999", exception.getMessage());
         verify(categoryRepository, never()).deleteById(categoryId);
     }
 

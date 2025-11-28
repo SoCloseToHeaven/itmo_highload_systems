@@ -30,17 +30,17 @@ public class DiscountServiceImpl implements DiscountService {
         try {
             productService.getProductById(request.getProductId());
         } catch (RuntimeException e) {
-            throw new ResourceNotFoundException("Product not found with id: " + request.getProductId());
+            throw new ResourceNotFoundException("Не найден продукт с id: " + request.getProductId());
         }
 
         try {
             priceService.getCurrentPriceForProduct(request.getProductId());
         } catch (RuntimeException e) {
-            throw new ResourceNotFoundException("Price not found for product with id: " + request.getProductId());
+            throw new ResourceNotFoundException("Не найдена цена для продукта с id: " + request.getProductId());
         }
 
         if (request.getEndDate().isBefore(request.getStartDate())) {
-            throw new BadRequestException("End date must be after start date");
+            throw new BadRequestException("Дата конца должна быть позже даты начала");
         }
 
         Discount discount = new Discount();
@@ -57,10 +57,10 @@ public class DiscountServiceImpl implements DiscountService {
     @Transactional
     public DiscountResponse updateDiscount(Long discountId, DiscountUpdateRequest request) {
         Discount discount = discountRepository.findById(discountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Discount not found with id: " + discountId));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найдена скидка с id: " + discountId));
 
         if (request.getEndDate().isBefore(request.getStartDate())) {
-            throw new BadRequestException("End date must be after start date");
+            throw new BadRequestException("Дата конца должна быть позже даты начала");
         }
 
         discount.setStartDate(request.getStartDate());
@@ -75,7 +75,7 @@ public class DiscountServiceImpl implements DiscountService {
     @Transactional
     public void deleteDiscount(Long discountId) {
         if (!discountRepository.existsById(discountId)) {
-            throw new ResourceNotFoundException("Discount not found with id: " + discountId);
+            throw new ResourceNotFoundException("Не найдена скидка с id: " + discountId);
         }
         discountRepository.deleteById(discountId);
     }

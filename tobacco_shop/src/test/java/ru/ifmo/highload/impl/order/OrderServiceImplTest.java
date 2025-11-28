@@ -98,7 +98,7 @@ class OrderServiceImplTest {
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> orderService.createOrder(request));
 
-        assertEquals("Order must contain at least one item", exception.getMessage());
+        assertEquals("В заказе должен быть хотя бы один продукт", exception.getMessage());
         verify(orderRepository, never()).save(any(Order.class));
     }
 
@@ -111,7 +111,7 @@ class OrderServiceImplTest {
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> orderService.createOrder(request));
 
-        assertEquals("Order must contain at least one item", exception.getMessage());
+        assertEquals("В заказе должен быть хотя бы один продукт", exception.getMessage());
         verify(orderRepository, never()).save(any(Order.class));
     }
 
@@ -143,7 +143,7 @@ class OrderServiceImplTest {
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> orderService.createOrder(request));
 
-        assertEquals("Insufficient stock for product: HQD Crystal Plus", exception.getMessage());
+        assertEquals("Недостаточный сток для продукта: HQD Crystal Plus", exception.getMessage());
 
         // Проверяем что заказ был создан, но затем произошла ошибка
         verify(orderRepository, times(1)).save(any(Order.class));
@@ -222,7 +222,7 @@ class OrderServiceImplTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> orderService.getOrderById(orderId));
 
-        assertEquals("Order not found with id: 999", exception.getMessage());
+        assertEquals("Не найден заказ с id: 999", exception.getMessage());
         verify(orderRepository, times(1)).findById(orderId);
     }
 
@@ -264,7 +264,7 @@ class OrderServiceImplTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> orderService.updateOrderStatus(orderId, newStatus));
 
-        assertEquals("Order not found with id: 999", exception.getMessage());
+        assertEquals("Не найден заказ с id: 999", exception.getMessage());
         verify(orderRepository, never()).save(any(Order.class));
     }
 

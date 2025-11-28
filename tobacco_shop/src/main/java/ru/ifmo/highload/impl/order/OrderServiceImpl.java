@@ -31,7 +31,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
         if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new BadRequestException("Order must contain at least one item");
+            throw new BadRequestException("В заказе должен быть хотя бы один продукт");
         }
 
         Order order = new Order();
@@ -47,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
             ProductResponse productResponse = productService.getProductById(item.getProductId());
 
             if (productResponse.getStockQuantity() < item.getQuantity()) {
-                throw new BadRequestException("Insufficient stock for product: " + productResponse.getName());
+                throw new BadRequestException("Недостаточный сток для продукта: " + productResponse.getName());
             }
 
             Integer currentPrice = priceService.getCurrentPriceForProduct(item.getProductId());
@@ -84,7 +84,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден заказ с id: " + id));
         return toOrderResponse(order);
     }
 
@@ -92,10 +92,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse updateOrderStatus(Long id, OrderStatus status) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Не найден заказ с id: " + id));
 
         if (status == OrderStatus.CANCELLED) {
-            throw new BadRequestException("Order cannot be cancelled in current status: " + order.getStatus());
+            throw new BadRequestException("Заказ не может быть отменен в текущем статусе: " + order.getStatus());
         }
 
         order.setStatus(status);

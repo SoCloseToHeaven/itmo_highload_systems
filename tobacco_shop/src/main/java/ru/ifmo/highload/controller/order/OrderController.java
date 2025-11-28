@@ -3,6 +3,7 @@ package ru.ifmo.highload.controller.order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.api.OrderService;
@@ -19,7 +20,7 @@ public class OrderController implements OrderApi {
 
     @Override
     public ResponseEntity<OrderResponse> createOrder(OrderCreateRequest request) {
-        return ResponseEntity.ok(orderService.createOrder(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.createOrder(request));
     }
 
     @Override
