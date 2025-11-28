@@ -16,6 +16,8 @@ import ru.ifmo.highload.dto.order.OrderItemRequest;
 import ru.ifmo.highload.dto.order.OrderResponse;
 import ru.ifmo.highload.dto.order.OrderStatus;
 import ru.ifmo.highload.dto.product.ProductResponse;
+import ru.ifmo.highload.impl.exceptions.BadRequestException;
+import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -93,10 +95,10 @@ class OrderServiceImplTest {
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(List.of());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> orderService.createOrder(request));
 
-        assertEquals("Order must contain at least one item", exception.getMessage());
+        assertEquals("В заказе должен быть хотя бы один продукт", exception.getMessage());
         verify(orderRepository, never()).save(any(Order.class));
     }
 
@@ -106,10 +108,10 @@ class OrderServiceImplTest {
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(null);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> orderService.createOrder(request));
 
-        assertEquals("Order must contain at least one item", exception.getMessage());
+        assertEquals("В заказе должен быть хотя бы один продукт", exception.getMessage());
         verify(orderRepository, never()).save(any(Order.class));
     }
 
@@ -138,10 +140,10 @@ class OrderServiceImplTest {
 
         when(orderRepository.save(any(Order.class))).thenReturn(initialOrder);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> orderService.createOrder(request));
 
-        assertEquals("Insufficient stock for product: HQD Crystal Plus", exception.getMessage());
+        assertEquals("Недостаточный сток для продукта: HQD Crystal Plus", exception.getMessage());
 
         // Проверяем что заказ был создан, но затем произошла ошибка
         verify(orderRepository, times(1)).save(any(Order.class));
@@ -167,9 +169,9 @@ class OrderServiceImplTest {
 
         when(orderRepository.save(any(Order.class))).thenReturn(initialOrder);
         when(productService.getProductById(999L))
-                .thenThrow(new RuntimeException("Product not found"));
+                .thenThrow(new ResourceNotFoundException("Product not found"));
 
-        assertThrows(RuntimeException.class, () -> orderService.createOrder(request));
+        assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(request));
 
         // Проверяем что заказ был создан, но затем произошла ошибка
         verify(orderRepository, times(1)).save(any(Order.class));
@@ -217,10 +219,10 @@ class OrderServiceImplTest {
         Long orderId = 999L;
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> orderService.getOrderById(orderId));
 
-        assertEquals("Order not found with id: 999", exception.getMessage());
+        assertEquals("Не найден заказ с id: 999", exception.getMessage());
         verify(orderRepository, times(1)).findById(orderId);
     }
 
@@ -259,10 +261,10 @@ class OrderServiceImplTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
                 () -> orderService.updateOrderStatus(orderId, newStatus));
 
-        assertEquals("Order not found with id: 999", exception.getMessage());
+        assertEquals("Не найден заказ с id: 999", exception.getMessage());
         verify(orderRepository, never()).save(any(Order.class));
     }
 

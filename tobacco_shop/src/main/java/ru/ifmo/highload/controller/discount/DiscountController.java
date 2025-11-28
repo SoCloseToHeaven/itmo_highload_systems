@@ -1,6 +1,7 @@
 package ru.ifmo.highload.controller.discount;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.api.DiscountService;
@@ -19,7 +20,7 @@ public class DiscountController implements DiscountApi {
 
     @Override
     public ResponseEntity<DiscountResponse> createDiscount(DiscountCreateRequest request) {
-        return ResponseEntity.ok(discountService.createDiscount(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(discountService.createDiscount(request));
     }
 
     @Override

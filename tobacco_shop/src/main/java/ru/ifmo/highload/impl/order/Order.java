@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ru.ifmo.highload.dto.order.OrderStatus;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "customer_order")
@@ -28,15 +28,15 @@ class Order {
     private OrderStatus status;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private ZonedDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private ZonedDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = ZonedDateTime.now();
+        updatedAt = ZonedDateTime.now();
         if (status == null) {
             status = OrderStatus.PENDING;
         }
@@ -44,6 +44,6 @@ class Order {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = ZonedDateTime.now();
     }
 }

@@ -3,6 +3,7 @@ package ru.ifmo.highload.controller.category;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.api.CategoryService;
@@ -24,7 +25,7 @@ public class CategoryController implements CategoryApi {
 
     @Override
     public ResponseEntity<CategoryResponse> createCategory(CategoryCreateRequest request) {
-        return ResponseEntity.ok(categoryService.createCategory(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(request));
     }
 
     @Override
