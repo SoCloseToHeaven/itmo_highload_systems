@@ -17,6 +17,6 @@ public class HttpErrorResponse {
     @Schema(description = "Описание ошибки", example = "Error")
     private String error;
 
-    @Schema(description = "Время ошибки", example = "2024-01-01T00:00:00")
+    @Schema(description ="Время ошибки", example = "2025-09-28T03:35:07.528+03:00")
     private ZonedDateTime timestamp;
 }
