@@ -143,9 +143,10 @@ class CategoryServiceImplTest {
     void updateCategory_WhenCategoryExists_ShouldUpdateAndReturnCategory() {
         // Сценарий: Обновление существующей категории
         Long categoryId = 1L;
+        Long parentCategoryId = 2L;
         CategoryUpdateRequest request = new CategoryUpdateRequest();
         request.setName("Обновленная категория");
-        request.setParentCategoryId(null);
+        request.setParentCategoryId(parentCategoryId);
 
         Category existingCategory = new Category();
         existingCategory.setId(categoryId);
@@ -155,8 +156,14 @@ class CategoryServiceImplTest {
         updatedCategory.setId(categoryId);
         updatedCategory.setName("Обновленная категория");
 
+        Category parentCategory = new Category();
+        parentCategory.setId(parentCategoryId);
+        parentCategory.setName("Родительская категория");
+
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
-        when(categoryRepository.existsByNameAndParentCategoryId("Обновленная категория", null)).thenReturn(false);
+        when(categoryRepository.existsById(parentCategoryId)).thenReturn(true);
+        when(categoryRepository.findById(parentCategoryId)).thenReturn(Optional.of(parentCategory));
+        when(categoryRepository.existsByNameAndParentCategoryId("Обновленная категория", parentCategoryId)).thenReturn(false);
         when(categoryRepository.save(any(Category.class))).thenReturn(updatedCategory);
 
         CategoryResponse result = categoryService.updateCategory(categoryId, request);
