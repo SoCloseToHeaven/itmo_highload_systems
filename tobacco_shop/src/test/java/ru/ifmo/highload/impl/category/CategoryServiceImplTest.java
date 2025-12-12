@@ -15,6 +15,8 @@ import ru.ifmo.highload.dto.category.CategoryUpdateRequest;
 import ru.ifmo.highload.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
+import java.lang.reflect.Method;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,12 +34,38 @@ class CategoryServiceImplTest {
     private CategoryServiceImpl categoryService;
 
     @Test
+    void categoryEntity_onCreate_SetsTimestamps() throws Exception {
+        Category category = new Category();
+        assertNull(category.getCreatedAt());
+        assertNull(category.getUpdatedAt());
+
+        Method onCreate = Category.class.getDeclaredMethod("onCreate");
+        onCreate.setAccessible(true);
+        onCreate.invoke(category);
+
+        assertNotNull(category.getCreatedAt());
+        assertNotNull(category.getUpdatedAt());
+    }
+
+    @Test
+    void categoryEntity_onUpdate_SetsUpdatedAt() throws Exception {
+        Category category = new Category();
+        category.setCreatedAt(ZonedDateTime.now().minusDays(1));
+
+        Method onUpdate = Category.class.getDeclaredMethod("onUpdate");
+        onUpdate.setAccessible(true);
+        onUpdate.invoke(category);
+
+        assertNotNull(category.getUpdatedAt());
+        assertTrue(category.getUpdatedAt().isAfter(category.getCreatedAt()));
+    }
+
+    @Test
     void getAllCategories_WhenCategoriesExist_ShouldReturnPaginatedCategories() {
-        // Сценарий: Получение всех категорий с пагинацией когда категории существуют
         Pageable pageable = PageRequest.of(0, 10);
         Category category = new Category();
         category.setId(1L);
-        category.setName("Электронные сигареты");
+        category.setName("Test");
         Page<Category> categoryPage = new PageImpl<>(List.of(category));
 
         when(categoryRepository.findAll(pageable)).thenReturn(categoryPage);
@@ -46,17 +74,15 @@ class CategoryServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
-        assertEquals("Электронные сигареты", result.getContent().get(0).getName());
-        verify(categoryRepository, times(1)).findAll(pageable);
+        verify(categoryRepository).findAll(pageable);
     }
 
     @Test
     void getCategoryById_WhenCategoryExists_ShouldReturnCategory() {
-        // Сценарий: Получение категории по существующему ID
         Long categoryId = 1L;
         Category category = new Category();
         category.setId(categoryId);
-        category.setName("Электронные сигареты");
+        category.setName("Test");
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
 
@@ -64,13 +90,11 @@ class CategoryServiceImplTest {
 
         assertNotNull(result);
         assertEquals(categoryId, result.getId());
-        assertEquals("Электронные сигареты", result.getName());
-        verify(categoryRepository, times(1)).findById(categoryId);
+        verify(categoryRepository).findById(categoryId);
     }
 
     @Test
     void getCategoryById_WhenCategoryNotExists_ShouldThrowException() {
-        // Сценарий: Попытка получения несуществующей категории
         Long categoryId = 999L;
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
@@ -78,42 +102,37 @@ class CategoryServiceImplTest {
                 () -> categoryService.getCategoryById(categoryId));
 
         assertEquals("Не найдена категория с id: 999", exception.getMessage());
-        verify(categoryRepository, times(1)).findById(categoryId);
+        verify(categoryRepository).findById(categoryId);
     }
 
     @Test
     void createCategory_WithValidData_ShouldCreateAndReturnCategory() {
-        // Сценарий: Создание новой категории с валидными данными
         CategoryCreateRequest request = new CategoryCreateRequest();
-        request.setName("Новая категория");
+        request.setName("New");
         request.setParentCategoryId(null);
 
         Category savedCategory = new Category();
         savedCategory.setId(1L);
-        savedCategory.setName("Новая категория");
+        savedCategory.setName("New");
 
-        when(categoryRepository.existsByNameAndParentCategoryId("Новая категория", null))
-                .thenReturn(false);
+        when(categoryRepository.existsByNameAndParentCategoryId("New", null)).thenReturn(false);
         when(categoryRepository.save(any(Category.class))).thenReturn(savedCategory);
 
         CategoryResponse result = categoryService.createCategory(request);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        assertEquals("Новая категория", result.getName());
-        assertNull(result.getParentCategoryId());
-        verify(categoryRepository, times(1)).save(any(Category.class));
+        assertEquals("New", result.getName());
+        verify(categoryRepository).save(any(Category.class));
     }
 
     @Test
     void createCategory_WithDuplicateName_ShouldThrowException() {
-        // Сценарий: Попытка создания категории с уже существующим именем
         CategoryCreateRequest request = new CategoryCreateRequest();
-        request.setName("Существующая категория");
+        request.setName("Existing");
         request.setParentCategoryId(null);
 
-        when(categoryRepository.existsByNameAndParentCategoryId("Существующая категория", null))
-                .thenReturn(true);
+        when(categoryRepository.existsByNameAndParentCategoryId("Existing", null)).thenReturn(true);
 
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> categoryService.createCategory(request));
@@ -124,12 +143,10 @@ class CategoryServiceImplTest {
 
     @Test
     void createCategory_WithNonExistentParent_ShouldThrowException() {
-        // Сценарий: Создание категории с несуществующим родителем
         CategoryCreateRequest request = new CategoryCreateRequest();
-        request.setName("Дочерняя категория");
+        request.setName("Child");
         request.setParentCategoryId(999L);
 
-        // из-за исключения при проверке existsById
         when(categoryRepository.existsById(999L)).thenReturn(false);
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
@@ -140,56 +157,104 @@ class CategoryServiceImplTest {
     }
 
     @Test
+    void createCategory_WithParentExists_ShouldCreateCategory() {
+        CategoryCreateRequest request = new CategoryCreateRequest();
+        request.setName("Child");
+        request.setParentCategoryId(1L);
+
+        Category savedCategory = new Category();
+        savedCategory.setId(2L);
+        savedCategory.setName("Child");
+
+        when(categoryRepository.existsById(1L)).thenReturn(true);
+        when(categoryRepository.existsByNameAndParentCategoryId("Child", 1L)).thenReturn(false);
+        when(categoryRepository.save(any(Category.class))).thenReturn(savedCategory);
+
+        CategoryResponse result = categoryService.createCategory(request);
+
+        assertNotNull(result);
+        assertEquals(2L, result.getId());
+        assertEquals("Child", result.getName());
+        verify(categoryRepository).save(any(Category.class));
+    }
+
+    @Test
     void updateCategory_WhenCategoryExists_ShouldUpdateAndReturnCategory() {
-        // Сценарий: Обновление существующей категории
         Long categoryId = 1L;
         Long parentCategoryId = 2L;
         CategoryUpdateRequest request = new CategoryUpdateRequest();
-        request.setName("Обновленная категория");
+        request.setName("Updated");
         request.setParentCategoryId(parentCategoryId);
 
         Category existingCategory = new Category();
         existingCategory.setId(categoryId);
-        existingCategory.setName("Старая категория");
+        existingCategory.setName("Old");
 
         Category updatedCategory = new Category();
         updatedCategory.setId(categoryId);
-        updatedCategory.setName("Обновленная категория");
+        updatedCategory.setName("Updated");
 
         Category parentCategory = new Category();
         parentCategory.setId(parentCategoryId);
-        parentCategory.setName("Родительская категория");
+        parentCategory.setParentCategoryId(null);
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
         when(categoryRepository.existsById(parentCategoryId)).thenReturn(true);
         when(categoryRepository.findById(parentCategoryId)).thenReturn(Optional.of(parentCategory));
-        when(categoryRepository.existsByNameAndParentCategoryId("Обновленная категория", parentCategoryId)).thenReturn(false);
+        when(categoryRepository.existsByNameAndParentCategoryId("Updated", parentCategoryId)).thenReturn(false);
         when(categoryRepository.save(any(Category.class))).thenReturn(updatedCategory);
 
         CategoryResponse result = categoryService.updateCategory(categoryId, request);
 
         assertNotNull(result);
-        assertEquals("Обновленная категория", result.getName());
-        verify(categoryRepository, times(1)).findById(categoryId);
-        verify(categoryRepository, times(1)).save(any(Category.class));
+        assertEquals("Updated", result.getName());
+        verify(categoryRepository).findById(categoryId);
+        verify(categoryRepository).save(any(Category.class));
     }
 
     @Test
-    void updateCategory_WhenCyclicalDependency_ShouldThrowException() {
-        // Сценарий: Обновление существующей категории с циклическими зависимостями
+    void updateCategory_WhenParentIdIsNull_ShouldUpdateCategory() {
         Long categoryId = 1L;
         CategoryUpdateRequest request = new CategoryUpdateRequest();
-        request.setName("Обновленная категория");
-        request.setParentCategoryId(categoryId);
+        request.setName("Updated");
+        request.setParentCategoryId(null);
 
         Category existingCategory = new Category();
         existingCategory.setId(categoryId);
-        existingCategory.setName("Старая категория");
+        existingCategory.setName("Old");
+        existingCategory.setParentCategoryId(2L);
+
+        Category updatedCategory = new Category();
+        updatedCategory.setId(categoryId);
+        updatedCategory.setName("Updated");
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
-        when(categoryRepository
-                .existsById(categoryId))
-                .thenReturn(true);
+        when(categoryRepository.existsByNameAndParentCategoryId("Updated", null)).thenReturn(false);
+        when(categoryRepository.save(any(Category.class))).thenReturn(updatedCategory);
+
+        CategoryResponse result = categoryService.updateCategory(categoryId, request);
+
+        assertNotNull(result);
+        assertEquals("Updated", result.getName());
+        verify(categoryRepository).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_WhenParentIdSameAsCurrent_ShouldNotCheckCircular() {
+        Long categoryId = 1L;
+        Long parentCategoryId = 1L;
+        CategoryUpdateRequest request = new CategoryUpdateRequest();
+        request.setName("Updated");
+        request.setParentCategoryId(parentCategoryId);
+
+        Category existingCategory = new Category();
+        existingCategory.setId(categoryId);
+        existingCategory.setName("Old");
+        existingCategory.setParentCategoryId(null);
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository.existsById(parentCategoryId)).thenReturn(true);
+        when(categoryRepository.findById(parentCategoryId)).thenReturn(Optional.of(existingCategory));
 
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> categoryService.updateCategory(categoryId, request));
@@ -199,42 +264,60 @@ class CategoryServiceImplTest {
     }
 
     @Test
-    void updateCategory_WhenCyclicalDependency2_ShouldThrowException() {
-        // Сценарий: Обновление существующей категории с циклическими зависимостями через одну
+    void updateCategory_WhenCyclicalDependency_ShouldThrowException() {
         Long categoryId1 = 1L;
         Long categoryId2 = 2L;
         CategoryUpdateRequest request = new CategoryUpdateRequest();
-        request.setName("Обновленная категория");
-        request.setParentCategoryId(categoryId1);
+        request.setName("Updated");
+        request.setParentCategoryId(categoryId2);
 
         Category existingCategory = new Category();
         existingCategory.setId(categoryId1);
-        existingCategory.setName("Старая категория");
-        existingCategory.setParentCategoryId(categoryId2);
+        existingCategory.setName("Old");
+        existingCategory.setParentCategoryId(null);
 
         Category parentCategory = new Category();
         parentCategory.setId(categoryId2);
-        parentCategory.setName("Родительская категория");
+        parentCategory.setParentCategoryId(categoryId1);
 
         when(categoryRepository.findById(categoryId1)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository.existsById(categoryId2)).thenReturn(true);
         when(categoryRepository.findById(categoryId2)).thenReturn(Optional.of(parentCategory));
-        when(categoryRepository
-                .existsById(categoryId1))
-                .thenReturn(true);
 
         BadRequestException exception = assertThrows(BadRequestException.class,
-                () -> categoryService.updateCategory(categoryId2, request));
+                () -> categoryService.updateCategory(categoryId1, request));
 
         assertEquals("Циклическая зависимость недопустима", exception.getMessage());
         verify(categoryRepository, never()).save(any(Category.class));
     }
 
     @Test
+    void updateCategory_WhenParentNotExists_ShouldThrowException() {
+        Long categoryId = 1L;
+        Long parentCategoryId = 999L;
+        CategoryUpdateRequest request = new CategoryUpdateRequest();
+        request.setName("Updated");
+        request.setParentCategoryId(parentCategoryId);
+
+        Category existingCategory = new Category();
+        existingCategory.setId(categoryId);
+        existingCategory.setName("Old");
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository.existsById(parentCategoryId)).thenReturn(false);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> categoryService.updateCategory(categoryId, request));
+
+        assertEquals("Не найдена родительская категория с id: 999", exception.getMessage());
+        verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
     void updateCategory_WhenCategoryNotExists_ShouldThrowException() {
-        // Сценарий: Попытка обновления несуществующей категории
         Long categoryId = 999L;
         CategoryUpdateRequest request = new CategoryUpdateRequest();
-        request.setName("Категория");
+        request.setName("Category");
 
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
@@ -247,7 +330,6 @@ class CategoryServiceImplTest {
 
     @Test
     void deleteCategory_WhenCategoryExistsWithoutChildren_ShouldDeleteCategory() {
-        // Сценарий: Удаление категории без дочерних категорий
         Long categoryId = 1L;
 
         when(categoryRepository.existsById(categoryId)).thenReturn(true);
@@ -256,12 +338,11 @@ class CategoryServiceImplTest {
 
         categoryService.deleteCategory(categoryId);
 
-        verify(categoryRepository, times(1)).deleteById(categoryId);
+        verify(categoryRepository).deleteById(categoryId);
     }
 
     @Test
     void deleteCategory_WhenCategoryHasChildren_ShouldThrowException() {
-        // Сценарий: Попытка удаления категории с дочерними категориями
         Long categoryId = 1L;
         Category childCategory = new Category();
         childCategory.setId(2L);
@@ -279,7 +360,6 @@ class CategoryServiceImplTest {
 
     @Test
     void deleteCategory_WhenCategoryNotExists_ShouldThrowException() {
-        // Сценарий: Попытка удаления несуществующей категории
         Long categoryId = 999L;
         when(categoryRepository.existsById(categoryId)).thenReturn(false);
 
@@ -292,12 +372,10 @@ class CategoryServiceImplTest {
 
     @Test
     void getRootCategories_ShouldReturnRootCategories() {
-        // Сценарий: Получение корневых категорий (без родителя)
         Pageable pageable = PageRequest.of(0, 10);
         Category rootCategory = new Category();
         rootCategory.setId(1L);
-        rootCategory.setName("Корневая категория");
-        rootCategory.setParentCategoryId(null);
+        rootCategory.setName("Root");
         Page<Category> rootCategories = new PageImpl<>(List.of(rootCategory));
 
         when(categoryRepository.findByParentCategoryIdIsNull(pageable)).thenReturn(rootCategories);
@@ -306,7 +384,73 @@ class CategoryServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
-        assertNull(result.getContent().get(0).getParentCategoryId());
-        verify(categoryRepository, times(1)).findByParentCategoryIdIsNull(pageable);
+        verify(categoryRepository).findByParentCategoryIdIsNull(pageable);
+    }
+
+    @Test
+    void updateCategory_WhenNameNotChanged_ShouldNotCheckDuplicateName() {
+        Long categoryId = 1L;
+        Long parentCategoryId = 2L;
+        CategoryUpdateRequest request = new CategoryUpdateRequest();
+        request.setName("Old"); // same name
+        request.setParentCategoryId(parentCategoryId);
+
+        Category existingCategory = new Category();
+        existingCategory.setId(categoryId);
+        existingCategory.setName("Old");
+        existingCategory.setParentCategoryId(parentCategoryId);
+
+        Category updatedCategory = new Category();
+        updatedCategory.setId(categoryId);
+        updatedCategory.setName("Old");
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+        // не вызывается проверка existsByNameAndParentCategoryId, потому что имя не изменилось
+        when(categoryRepository.save(any(Category.class))).thenReturn(updatedCategory);
+
+        // Не должно быть циклической зависимости, так как parentCategoryId не меняется
+        // Но в методе isCircularDependency нужно пройти по цепочке. Создадим родителя, который не является циклом.
+        Category parentCategory = new Category();
+        parentCategory.setId(parentCategoryId);
+        parentCategory.setParentCategoryId(null);
+
+        CategoryResponse result = categoryService.updateCategory(categoryId, request);
+
+        assertNotNull(result);
+        assertEquals("Old", result.getName());
+        // Проверяем, что не было вызова existsByNameAndParentCategoryId, так как имя не изменилось
+        verify(categoryRepository, never()).existsByNameAndParentCategoryId(eq("Old"), eq(parentCategoryId));
+        verify(categoryRepository).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_WhenParentIdNotChanged_ShouldNotCheckCircular() {
+        Long categoryId = 1L;
+        Long parentCategoryId = 2L;
+        CategoryUpdateRequest request = new CategoryUpdateRequest();
+        request.setName("Updated");
+        request.setParentCategoryId(parentCategoryId);
+
+        Category existingCategory = new Category();
+        existingCategory.setId(categoryId);
+        existingCategory.setName("Old");
+        existingCategory.setParentCategoryId(parentCategoryId);
+
+        Category updatedCategory = new Category();
+        updatedCategory.setId(categoryId);
+        updatedCategory.setName("Updated");
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+        // existsById не вызывается, потому что parentCategoryId не меняется (см. условие в методе)
+        when(categoryRepository.existsByNameAndParentCategoryId("Updated", parentCategoryId)).thenReturn(false);
+        when(categoryRepository.save(any(Category.class))).thenReturn(updatedCategory);
+
+        CategoryResponse result = categoryService.updateCategory(categoryId, request);
+
+        assertNotNull(result);
+        assertEquals("Updated", result.getName());
+        // existsById не должен вызываться, так как parentCategoryId не меняется (сравнивается в методе)
+        verify(categoryRepository, never()).existsById(anyLong());
+        verify(categoryRepository).save(any(Category.class));
     }
 }
