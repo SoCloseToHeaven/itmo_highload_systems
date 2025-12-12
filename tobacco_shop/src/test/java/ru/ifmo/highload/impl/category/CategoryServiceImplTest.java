@@ -143,9 +143,10 @@ class CategoryServiceImplTest {
     void updateCategory_WhenCategoryExists_ShouldUpdateAndReturnCategory() {
         // Сценарий: Обновление существующей категории
         Long categoryId = 1L;
+        Long parentCategoryId = 2L;
         CategoryUpdateRequest request = new CategoryUpdateRequest();
         request.setName("Обновленная категория");
-        request.setParentCategoryId(null);
+        request.setParentCategoryId(parentCategoryId);
 
         Category existingCategory = new Category();
         existingCategory.setId(categoryId);
@@ -155,8 +156,14 @@ class CategoryServiceImplTest {
         updatedCategory.setId(categoryId);
         updatedCategory.setName("Обновленная категория");
 
+        Category parentCategory = new Category();
+        parentCategory.setId(parentCategoryId);
+        parentCategory.setName("Родительская категория");
+
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
-        when(categoryRepository.existsByNameAndParentCategoryId("Обновленная категория", null)).thenReturn(false);
+        when(categoryRepository.existsById(parentCategoryId)).thenReturn(true);
+        when(categoryRepository.findById(parentCategoryId)).thenReturn(Optional.of(parentCategory));
+        when(categoryRepository.existsByNameAndParentCategoryId("Обновленная категория", parentCategoryId)).thenReturn(false);
         when(categoryRepository.save(any(Category.class))).thenReturn(updatedCategory);
 
         CategoryResponse result = categoryService.updateCategory(categoryId, request);
@@ -165,6 +172,61 @@ class CategoryServiceImplTest {
         assertEquals("Обновленная категория", result.getName());
         verify(categoryRepository, times(1)).findById(categoryId);
         verify(categoryRepository, times(1)).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_WhenCyclicalDependency_ShouldThrowException() {
+        // Сценарий: Обновление существующей категории с циклическими зависимостями
+        Long categoryId = 1L;
+        CategoryUpdateRequest request = new CategoryUpdateRequest();
+        request.setName("Обновленная категория");
+        request.setParentCategoryId(categoryId);
+
+        Category existingCategory = new Category();
+        existingCategory.setId(categoryId);
+        existingCategory.setName("Старая категория");
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository
+                .existsById(categoryId))
+                .thenReturn(true);
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> categoryService.updateCategory(categoryId, request));
+
+        assertEquals("Циклическая зависимость недопустима", exception.getMessage());
+        verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_WhenCyclicalDependency2_ShouldThrowException() {
+        // Сценарий: Обновление существующей категории с циклическими зависимостями через одну
+        Long categoryId1 = 1L;
+        Long categoryId2 = 2L;
+        CategoryUpdateRequest request = new CategoryUpdateRequest();
+        request.setName("Обновленная категория");
+        request.setParentCategoryId(categoryId1);
+
+        Category existingCategory = new Category();
+        existingCategory.setId(categoryId1);
+        existingCategory.setName("Старая категория");
+        existingCategory.setParentCategoryId(categoryId2);
+
+        Category parentCategory = new Category();
+        parentCategory.setId(categoryId2);
+        parentCategory.setName("Родительская категория");
+
+        when(categoryRepository.findById(categoryId1)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository.findById(categoryId2)).thenReturn(Optional.of(parentCategory));
+        when(categoryRepository
+                .existsById(categoryId1))
+                .thenReturn(true);
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> categoryService.updateCategory(categoryId2, request));
+
+        assertEquals("Циклическая зависимость недопустима", exception.getMessage());
+        verify(categoryRepository, never()).save(any(Category.class));
     }
 
     @Test
