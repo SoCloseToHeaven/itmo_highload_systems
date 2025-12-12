@@ -1,5 +1,7 @@
 package ru.ifmo.highload.api;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.dto.discount.DiscountResponse;
 import ru.ifmo.highload.dto.discount.DiscountUpdateRequest;
@@ -14,4 +16,6 @@ public interface DiscountService {
     void deleteDiscount(Long discountId);
 
     List<DiscountResponse> getActiveDiscounts();
+
+    Page<DiscountResponse> getAllDiscounts(Pageable pageable);
 }

@@ -42,4 +42,9 @@ public class OrderController implements OrderApi {
     public ResponseEntity<Page<OrderResponse>> getMyOrders(Pageable pageable) {
         return ResponseEntity.ok(orderService.getMyOrders(pageable));
     }
+
+    @Override
+    public ResponseEntity<Page<OrderResponse>> getAllOrders(Pageable pageable) {
+        return ResponseEntity.ok(orderService.getAllOrders(pageable));
+    }
 }

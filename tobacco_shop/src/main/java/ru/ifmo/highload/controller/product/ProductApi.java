@@ -63,4 +63,17 @@ public interface ProductApi {
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
+
+    @Operation(summary = "Получить все продукты", description = "Получить paginated список продуктов")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Продукты успешно получены")
+    })
+    @GetMapping
+    ResponseEntity<Page<ProductResponse>> getAllProducts(
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 }

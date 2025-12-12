@@ -111,6 +111,11 @@ public class ProductServiceImpl implements ProductService {
         return toProductResponse(product);
     }
 
+    @Override
+    public Page<ProductResponse> getAllCategories(Pageable pageable) {
+        return productRepository.findAll(pageable).map(this::toProductResponse);
+    }
+
     private ProductResponse toProductResponse(Product product) {
 //        Integer currentPrice;
 //        try {

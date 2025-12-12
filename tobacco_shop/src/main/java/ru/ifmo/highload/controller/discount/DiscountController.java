@@ -1,6 +1,8 @@
 package ru.ifmo.highload.controller.discount;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +39,10 @@ public class DiscountController implements DiscountApi {
     @Override
     public ResponseEntity<List<DiscountResponse>> getActiveDiscounts() {
         return ResponseEntity.ok(discountService.getActiveDiscounts());
+    }
+
+    @Override
+    public ResponseEntity<Page<DiscountResponse>> getAllDiscounts(Pageable pageable) {
+        return ResponseEntity.ok(discountService.getAllDiscounts(pageable));
     }
 }

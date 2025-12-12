@@ -74,4 +74,17 @@ public interface OrderApi {
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
+
+    @Operation(summary = "Получить все заказы", description = "Получить paginated список заказов")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Заказы успешно получены")
+    })
+    @GetMapping
+    ResponseEntity<Page<OrderResponse>> getAllOrders(
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 }
