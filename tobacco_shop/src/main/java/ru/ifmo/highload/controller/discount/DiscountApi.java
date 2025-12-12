@@ -20,7 +20,7 @@ public interface DiscountApi {
 
     @Operation(summary = "Создать скидку", description = "Создать новую скидку для товара")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Скидка успешно создана"),
+            @ApiResponse(responseCode = "201", description = "Скидка успешно создана"),
             @ApiResponse(responseCode = "404", description = "Товар или цена не найдены"),
             @ApiResponse(responseCode = "400", description = "Неверный диапазон дат")
     })
@@ -41,7 +41,7 @@ public interface DiscountApi {
 
     @Operation(summary = "Удалить скидку", description = "Удалить скидку по ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Скидка успешно удалена"),
+            @ApiResponse(responseCode = "204", description = "Скидка успешно удалена"),
             @ApiResponse(responseCode = "404", description = "Скидка не найдена")
     })
     @DeleteMapping("/{discountId}")

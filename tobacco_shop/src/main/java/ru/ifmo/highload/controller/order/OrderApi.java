@@ -20,7 +20,7 @@ public interface OrderApi {
 
     @Operation(summary = "Создать заказ", description = "Создать новый заказ с поддержкой транзакций")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Заказ успешно создан"),
+            @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
             @ApiResponse(responseCode = "400", description = "Неверные данные заказа или недостаточно товара"),
             @ApiResponse(responseCode = "404", description = "Товар не найден")
     })
@@ -55,7 +55,12 @@ public interface OrderApi {
     @GetMapping("/user/{userId}")
     ResponseEntity<Page<OrderResponse>> getUserOrders(
             @Parameter(description = "ID пользователя") @PathVariable Long userId,
-            @Parameter(description = "Параметры пагинации") Pageable pageable);
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 
     @Operation(summary = "Получить мои заказы", description = "Получить paginated список заказов текущего пользователя")
     @ApiResponses(value = {
@@ -63,5 +68,10 @@ public interface OrderApi {
     })
     @GetMapping("/my")
     ResponseEntity<Page<OrderResponse>> getMyOrders(
-            @Parameter(description = "Параметры пагинации") Pageable pageable);
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 }
