@@ -86,6 +86,14 @@ public class PriceServiceImpl implements PriceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Не найдена цена для продукта с id: " + productId));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PriceResponse getPriceById(Long id) {
+        ActualPrice price = actualPriceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Не найдена цена с id: " + id));
+        return toPriceResponse(price);
+    }
+
     private PriceResponse toPriceResponse(ActualPrice price) {
         PriceResponse response = new PriceResponse();
         response.setId(price.getId());

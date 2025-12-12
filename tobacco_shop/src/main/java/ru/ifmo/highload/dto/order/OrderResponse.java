@@ -2,6 +2,8 @@ package ru.ifmo.highload.dto.order;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -18,7 +20,8 @@ public class OrderResponse {
     @Schema(description = "Статус заказа", example = "PENDING")
     private OrderStatus status;
 
-    @Schema(description = "Дата создания заказа", example = "2024-01-01T12:00:00")
+    @Schema(description = "Дата создания заказа", example = "2025-12-28T03:35:07.528+03:00")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private ZonedDateTime createdAt;
 
     @Schema(description = "Список товаров в заказе")

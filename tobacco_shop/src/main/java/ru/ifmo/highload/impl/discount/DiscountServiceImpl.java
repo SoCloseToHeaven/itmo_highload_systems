@@ -34,6 +34,12 @@ public class DiscountServiceImpl implements DiscountService {
         }
 
         try {
+            priceService.getPriceById(request.getActualPriceId());
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Не найдена цена с id: " + request.getActualPriceId());
+        }
+
+        try {
             priceService.getCurrentPriceForProduct(request.getProductId());
         } catch (RuntimeException e) {
             throw new ResourceNotFoundException("Не найдена цена для продукта с id: " + request.getProductId());
@@ -61,6 +67,12 @@ public class DiscountServiceImpl implements DiscountService {
 
         if (request.getEndDate().isBefore(request.getStartDate())) {
             throw new BadRequestException("Дата конца должна быть позже даты начала");
+        }
+
+        try {
+            priceService.getPriceById(request.getActualPriceId());
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Не найдена цена с id: " + request.getActualPriceId());
         }
 
         discount.setStartDate(request.getStartDate());

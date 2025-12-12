@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.time.ZonedDateTime;
 
 @Data
@@ -19,11 +21,13 @@ public class DiscountCreateRequest {
     private Long actualPriceId;
 
     @NotNull(message = "Дата начала обязательна")
-    @Schema(description = "Дата начала действия скидки", example = "2024-01-01T00:00:00", required = true)
+    @Schema(description = "Дата начала действия скидки", example = "2025-09-28T03:35:07.528+03:00", required = true)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private ZonedDateTime startDate;
 
     @NotNull(message = "Дата окончания обязательна")
     @Future(message = "Дата окончания должна быть в будущем")
-    @Schema(description = "Дата окончания действия скидки", example = "2024-12-31T23:59:59", required = true)
+    @Schema(description = "Дата окончания действия скидки", example = "2025-12-28T03:35:07.528+03:00", required = true)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private ZonedDateTime endDate;
 }

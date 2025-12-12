@@ -24,11 +24,16 @@ public interface CategoryApi {
     })
     @GetMapping
     ResponseEntity<Page<CategoryResponse>> getCategories(
-            @Parameter(description = "Параметры пагинации") Pageable pageable);
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 
     @Operation(summary = "Создать категорию", description = "Создать новую категорию товаров")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Категория успешно создана"),
+            @ApiResponse(responseCode = "201", description = "Категория успешно создана"),
             @ApiResponse(responseCode = "400", description = "Неверные данные"),
             @ApiResponse(responseCode = "409", description = "Категория с таким именем уже существует")
     })
@@ -49,7 +54,7 @@ public interface CategoryApi {
 
     @Operation(summary = "Удалить категорию", description = "Удалить категорию по ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Категория успешно удалена"),
+            @ApiResponse(responseCode = "204", description = "Категория успешно удалена"),
             @ApiResponse(responseCode = "404", description = "Категория не найдена"),
             @ApiResponse(responseCode = "409", description = "Невозможно удалить категорию с дочерними категориями")
     })
