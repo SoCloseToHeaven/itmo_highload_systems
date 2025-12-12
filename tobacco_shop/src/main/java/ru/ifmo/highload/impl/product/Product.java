@@ -47,15 +47,4 @@ class Product {
     protected void onUpdate() {
         updatedAt = ZonedDateTime.now();
     }
-
-    public void decreaseStock(Integer quantity) {
-        if (this.stockQuantity < quantity) {
-            throw new IllegalArgumentException("Insufficient stock");
-        }
-        this.stockQuantity -= quantity;
-    }
-
-    public void increaseStock(Integer quantity) {
-        this.stockQuantity += quantity;
-    }
 }
