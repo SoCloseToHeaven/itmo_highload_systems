@@ -1,6 +1,8 @@
 package ru.ifmo.highload.impl.discount;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.DiscountService;
@@ -100,6 +102,11 @@ public class DiscountServiceImpl implements DiscountService {
                 .stream()
                 .map(this::toDiscountResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<DiscountResponse> getAllDiscounts(Pageable pageable) {
+        return discountRepository.findAll(pageable).map(this::toDiscountResponse);
     }
 
     private DiscountResponse toDiscountResponse(Discount discount) {

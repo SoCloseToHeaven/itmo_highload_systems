@@ -35,4 +35,9 @@ public class ProductController implements ProductApi {
     public ResponseEntity<Page<ProductResponse>> searchProducts(String name, Pageable pageable) {
         return ResponseEntity.ok(productService.searchProducts(name, pageable));
     }
+
+    @Override
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
+        return ResponseEntity.ok(productService.getAllCategories(pageable));
+    }
 }

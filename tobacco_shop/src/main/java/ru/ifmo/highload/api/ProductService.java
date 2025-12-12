@@ -18,4 +18,6 @@ public interface ProductService {
     ProductResponse addProductToCategory(Long productId, Long categoryId);
 
     ProductResponse removeProductFromCategory(Long productId, Long categoryId);
+
+    Page<ProductResponse> getAllCategories(Pageable pageable);
 }
