@@ -5,6 +5,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.dto.actual_price.PriceResponse;
@@ -12,6 +16,7 @@ import ru.ifmo.highload.dto.actual_price.PriceUpdateRequest;
 import ru.ifmo.highload.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.impl.exceptions.ResourceNotFoundException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -143,5 +148,24 @@ class PriceServiceImplTest {
         priceService.deletePriceByProductId(productId);
 
         verify(actualPriceRepository, times(1)).deleteByProductId(productId);
+    }
+
+    @Test
+    void getAllPrices_ShouldReturnPrices() {
+        // Сценарий: Получение всех цен
+        Long productId = 1L;
+        ActualPrice price = new ActualPrice();
+        price.setId(1L);
+        price.setProductId(productId);
+        price.setPrice(45000);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(actualPriceRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(price)));
+
+        Page<PriceResponse> result = priceService.getAllPrices(pageable);
+
+        assertNotNull(result);
+        assertEquals(45000, result.get().findFirst().get().getPrice());
+        verify(actualPriceRepository, times(1)).findAll(pageable);
     }
 }
