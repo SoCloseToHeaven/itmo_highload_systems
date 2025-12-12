@@ -121,6 +121,11 @@ public class OrderServiceImpl implements OrderService {
                 .map(this::toOrderResponse);
     }
 
+    @Override
+    public Page<OrderResponse> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable).map(this::toOrderResponse);
+    }
+
     private OrderResponse toOrderResponse(Order order) {
         List<OrderProduct> orderProducts = orderProductRepository.findByOrderId(order.getId());
 

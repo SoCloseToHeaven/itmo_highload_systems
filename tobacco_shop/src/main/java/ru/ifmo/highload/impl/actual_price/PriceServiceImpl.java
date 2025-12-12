@@ -1,6 +1,8 @@
 package ru.ifmo.highload.impl.actual_price;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ifmo.highload.api.PriceService;
@@ -92,6 +94,11 @@ public class PriceServiceImpl implements PriceService {
         ActualPrice price = actualPriceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Не найдена цена с id: " + id));
         return toPriceResponse(price);
+    }
+
+    @Override
+    public Page<PriceResponse> getAllPrices(Pageable pageable) {
+        return actualPriceRepository.findAll(pageable).map(this::toPriceResponse);
     }
 
     private PriceResponse toPriceResponse(ActualPrice price) {

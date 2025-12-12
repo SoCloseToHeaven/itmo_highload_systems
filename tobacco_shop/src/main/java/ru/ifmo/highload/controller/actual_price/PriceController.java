@@ -1,6 +1,8 @@
 package ru.ifmo.highload.controller.actual_price;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,5 +43,10 @@ public class PriceController implements PriceApi {
     public ResponseEntity<Void> deletePriceByProduct(Long productId) {
         priceService.deletePriceByProductId(productId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<Page<PriceResponse>> getAllPrices(Pageable pageable) {
+        return ResponseEntity.ok(priceService.getAllPrices(pageable));
     }
 }

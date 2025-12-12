@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,4 +65,17 @@ public interface PriceApi {
     @DeleteMapping("/product/{productId}")
     ResponseEntity<Void> deletePriceByProduct(
             @Parameter(description = "ID товара") @PathVariable Long productId);
+
+    @Operation(summary = "Получить все цены", description = "Получить paginated список цен")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Цены успешно получены")
+    })
+    @GetMapping
+    ResponseEntity<Page<PriceResponse>> getAllPrices(
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 }

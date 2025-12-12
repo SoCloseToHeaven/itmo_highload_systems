@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,4 +56,17 @@ public interface DiscountApi {
     })
     @GetMapping("/active")
     ResponseEntity<List<DiscountResponse>> getActiveDiscounts();
+
+    @Operation(summary = "Получить все скидки", description = "Получить paginated список скидок")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Скидки успешно получены")
+    })
+    @GetMapping
+    ResponseEntity<Page<DiscountResponse>> getAllDiscounts(
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 }
