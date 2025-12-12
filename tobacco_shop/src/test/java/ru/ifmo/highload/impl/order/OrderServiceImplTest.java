@@ -29,24 +29,104 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
 
-    @Mock
-    private OrderRepository orderRepository;
+    @Mock private OrderRepository orderRepository;
+    @Mock private OrderProductRepository orderProductRepository;
+    @Mock private ProductService productService;
+    @Mock private PriceService priceService;
+    @InjectMocks private OrderServiceImpl orderService;
 
-    @Mock
-    private OrderProductRepository orderProductRepository;
+    @Test
+    void getAllOrders_ShouldReturnPaginatedOrders() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Order order1 = new Order();
+        order1.setId(1L);
+        order1.setTotalSum(80000);
+        order1.setStatus(OrderStatus.COMPLETED);
 
-    @Mock
-    private ProductService productService;
+        Order order2 = new Order();
+        order2.setId(2L);
+        order2.setTotalSum(45000);
+        order2.setStatus(OrderStatus.PROCESSING);
 
-    @Mock
-    private PriceService priceService;
+        Page<Order> orderPage = new PageImpl<>(List.of(order1, order2));
 
-    @InjectMocks
-    private OrderServiceImpl orderService;
+        when(orderRepository.findAll(pageable)).thenReturn(orderPage);
+        when(orderProductRepository.findByOrderId(1L)).thenReturn(List.of());
+        when(orderProductRepository.findByOrderId(2L)).thenReturn(List.of());
+
+        Page<OrderResponse> result = orderService.getAllOrders(pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals(OrderStatus.COMPLETED, result.getContent().get(0).getStatus());
+        assertEquals(OrderStatus.PROCESSING, result.getContent().get(1).getStatus());
+        verify(orderRepository, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void getAllOrders_WhenNoOrders_ShouldReturnEmptyPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> emptyPage = new PageImpl<>(List.of());
+
+        when(orderRepository.findAll(pageable)).thenReturn(emptyPage);
+
+        Page<OrderResponse> result = orderService.getAllOrders(pageable);
+
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
+        verify(orderRepository, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void updateOrderStatus_WhenStatusIsCancelled_ShouldThrowException() {
+        Long orderId = 1L;
+        Order existingOrder = new Order();
+        existingOrder.setId(orderId);
+        existingOrder.setStatus(OrderStatus.PENDING);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(existingOrder));
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED));
+
+        assertEquals("Заказ не может быть отменен в текущем статусе: PENDING", exception.getMessage());
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void updateOrderStatus_WhenStatusIsCancelledForProcessingOrder_ShouldThrowException() {
+        Long orderId = 1L;
+        Order existingOrder = new Order();
+        existingOrder.setId(orderId);
+        existingOrder.setStatus(OrderStatus.PROCESSING);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(existingOrder));
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED));
+
+        assertEquals("Заказ не может быть отменен в текущем статусе: PROCESSING", exception.getMessage());
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void updateOrderStatus_WhenStatusIsCancelledForCompletedOrder_ShouldThrowException() {
+        Long orderId = 1L;
+        Order existingOrder = new Order();
+        existingOrder.setId(orderId);
+        existingOrder.setStatus(OrderStatus.COMPLETED);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(existingOrder));
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED));
+
+        assertEquals("Заказ не может быть отменен в текущем статусе: COMPLETED", exception.getMessage());
+        verify(orderRepository, never()).save(any(Order.class));
+    }
 
     @Test
     void createOrder_WithValidItems_ShouldCreateOrder() {
-        // Сценарий: Создание заказа с валидными товарами
         OrderItemRequest item1 = new OrderItemRequest();
         item1.setProductId(1L);
         item1.setQuantity(2);
@@ -54,19 +134,14 @@ class OrderServiceImplTest {
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(List.of(item1));
 
-        // Моки для продуктов
         ProductResponse product1 = new ProductResponse();
         product1.setId(1L);
         product1.setName("HQD Crystal Plus");
         product1.setStockQuantity(10);
 
-        // Моки для цен
         when(priceService.getCurrentPriceForProduct(1L)).thenReturn(45000);
-
-        // Моки для получения продуктов
         when(productService.getProductById(1L)).thenReturn(product1);
 
-        // Моки для сохранения заказа и товаров заказа
         Order savedOrder = new Order();
         savedOrder.setId(1L);
         savedOrder.setTotalSum(0);
@@ -91,7 +166,6 @@ class OrderServiceImplTest {
 
     @Test
     void createOrder_WithEmptyItems_ShouldThrowException() {
-        // Сценарий: Попытка создания заказа без товаров
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(List.of());
 
@@ -104,7 +178,6 @@ class OrderServiceImplTest {
 
     @Test
     void createOrder_WithNullItems_ShouldThrowException() {
-        // Сценарий: Попытка создания заказа с null списком товаров
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(null);
 
@@ -117,10 +190,9 @@ class OrderServiceImplTest {
 
     @Test
     void createOrder_WithInsufficientStock_ShouldThrowException() {
-        // Сценарий: Попытка создания заказа с недостаточным количеством товара
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(1L);
-        item.setQuantity(20); // Заказываем больше чем есть в наличии
+        item.setQuantity(20);
 
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(List.of(item));
@@ -128,11 +200,9 @@ class OrderServiceImplTest {
         ProductResponse product = new ProductResponse();
         product.setId(1L);
         product.setName("HQD Crystal Plus");
-        product.setStockQuantity(10); // В наличии только 10
+        product.setStockQuantity(10);
 
         when(productService.getProductById(1L)).thenReturn(product);
-
-        // Создаем начальный заказ который будет сохранен до проверки запасов
         Order initialOrder = new Order();
         initialOrder.setId(1L);
         initialOrder.setTotalSum(0);
@@ -144,16 +214,12 @@ class OrderServiceImplTest {
                 () -> orderService.createOrder(request));
 
         assertEquals("Недостаточный сток для продукта: HQD Crystal Plus", exception.getMessage());
-
-        // Проверяем что заказ был создан, но затем произошла ошибка
         verify(orderRepository, times(1)).save(any(Order.class));
-        // Проверяем что не было сохранения order products
         verify(orderProductRepository, never()).saveAll(anyList());
     }
 
     @Test
     void createOrder_WhenProductNotExists_ShouldThrowException() {
-        // Сценарий: Попытка создания заказа с несуществующим товаром
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(999L);
         item.setQuantity(1);
@@ -161,7 +227,6 @@ class OrderServiceImplTest {
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(List.of(item));
 
-        // Создаем начальный заказ который будет сохранен до проверки товара
         Order initialOrder = new Order();
         initialOrder.setId(1L);
         initialOrder.setTotalSum(0);
@@ -172,16 +237,12 @@ class OrderServiceImplTest {
                 .thenThrow(new ResourceNotFoundException("Product not found"));
 
         assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(request));
-
-        // Проверяем что заказ был создан, но затем произошла ошибка
         verify(orderRepository, times(1)).save(any(Order.class));
-        // Проверяем что не было сохранения order products
         verify(orderProductRepository, never()).saveAll(anyList());
     }
 
     @Test
     void getOrderById_WhenOrderExists_ShouldReturnOrder() {
-        // Сценарий: Получение заказа по существующему ID
         Long orderId = 1L;
         Order order = new Order();
         order.setId(orderId);
@@ -215,7 +276,6 @@ class OrderServiceImplTest {
 
     @Test
     void getOrderById_WhenOrderNotExists_ShouldThrowException() {
-        // Сценарий: Попытка получения несуществующего заказа
         Long orderId = 999L;
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
@@ -228,7 +288,6 @@ class OrderServiceImplTest {
 
     @Test
     void updateOrderStatus_WhenOrderExists_ShouldUpdateStatus() {
-        // Сценарий: Обновление статуса существующего заказа
         Long orderId = 1L;
         OrderStatus newStatus = OrderStatus.PROCESSING;
 
@@ -242,8 +301,6 @@ class OrderServiceImplTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(existingOrder));
         when(orderRepository.save(any(Order.class))).thenReturn(updatedOrder);
-
-        // УБИРАЕМ ненужные заглушки для toOrderResponse
         when(orderProductRepository.findByOrderId(orderId)).thenReturn(List.of());
 
         OrderResponse result = orderService.updateOrderStatus(orderId, newStatus);
@@ -255,7 +312,6 @@ class OrderServiceImplTest {
 
     @Test
     void updateOrderStatus_WhenOrderNotExists_ShouldThrowException() {
-        // Сценарий: Попытка обновления статуса несуществующего заказа
         Long orderId = 999L;
         OrderStatus newStatus = OrderStatus.PROCESSING;
 
@@ -269,25 +325,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void updateOrderStatus_WhenCancellingCompletedOrder_ShouldThrowException() {
-        // Сценарий: Обновление статуса завершенного заказа на CANCELLED
-        Long orderId = 1L;
-        OrderStatus cancelledStatus = OrderStatus.CANCELLED;
-
-        Order existingOrder = new Order();
-        existingOrder.setId(orderId);
-        existingOrder.setStatus(OrderStatus.COMPLETED);
-
-        Order updatedOrder = new Order();
-        updatedOrder.setId(orderId);
-        updatedOrder.setStatus(cancelledStatus);
-
-        assertThrows(RuntimeException.class, () -> orderService.updateOrderStatus(orderId, cancelledStatus));
-    }
-
-    @Test
     void getUserOrders_ShouldReturnPaginatedOrders() {
-        // Сценарий: Получение заказов пользователя с пагинацией
         Pageable pageable = PageRequest.of(0, 10);
 
         Order order1 = new Order();
@@ -303,8 +341,6 @@ class OrderServiceImplTest {
         Page<Order> orderPage = new PageImpl<>(List.of(order1, order2));
 
         when(orderRepository.findAll(pageable)).thenReturn(orderPage);
-
-        // УБИРАЕМ ненужные заглушки для toOrderResponse
         when(orderProductRepository.findByOrderId(anyLong())).thenReturn(List.of());
 
         Page<OrderResponse> result = orderService.getUserOrders(1L, pageable);
@@ -316,7 +352,6 @@ class OrderServiceImplTest {
 
     @Test
     void getMyOrders_ShouldReturnPaginatedOrders() {
-        // Сценарий: Получение заказов текущего пользователя с пагинацией
         Pageable pageable = PageRequest.of(0, 10);
 
         Order order = new Order();
@@ -327,8 +362,6 @@ class OrderServiceImplTest {
         Page<Order> orderPage = new PageImpl<>(List.of(order));
 
         when(orderRepository.findAll(pageable)).thenReturn(orderPage);
-
-        // УБИРАЕМ ненужные заглушки для toOrderResponse
         when(orderProductRepository.findByOrderId(anyLong())).thenReturn(List.of());
 
         Page<OrderResponse> result = orderService.getMyOrders(pageable);
