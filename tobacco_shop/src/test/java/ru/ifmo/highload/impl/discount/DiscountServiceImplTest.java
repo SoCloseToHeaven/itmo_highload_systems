@@ -5,6 +5,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import ru.ifmo.highload.api.PriceService;
 import ru.ifmo.highload.api.ProductService;
 import ru.ifmo.highload.dto.discount.DiscountCreateRequest;
@@ -274,5 +278,38 @@ class DiscountServiceImplTest {
         discount.setEndDate(ZonedDateTime.now().minusDays(1));
 
         assertFalse(discount.isActive());
+    }
+
+    @Test
+    void getAllDiscounts_ShouldReturnActiveDiscounts() {
+        // Сценарий: Получение всех скидок
+        ZonedDateTime now = ZonedDateTime.now();
+        Discount activeDiscount1 = new Discount();
+        activeDiscount1.setId(1L);
+        activeDiscount1.setProductId(1L);
+        activeDiscount1.setActualPriceId(1L);
+        activeDiscount1.setStartDate(now.minusDays(1));
+        activeDiscount1.setEndDate(now.plusDays(5));
+
+        Discount activeDiscount2 = new Discount();
+        activeDiscount2.setId(2L);
+        activeDiscount2.setProductId(2L);
+        activeDiscount2.setActualPriceId(2L);
+        activeDiscount2.setStartDate(now.minusDays(2));
+        activeDiscount2.setEndDate(now.plusDays(3));
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        List<Discount> discounts = List.of(activeDiscount1, activeDiscount2);
+
+        when(discountRepository.findAll(pageable)).thenReturn(new PageImpl<>(discounts));
+
+        Page<DiscountResponse> result = discountService.getAllDiscounts(pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getNumberOfElements());
+        assertTrue(result.stream().anyMatch(d -> d.getId().equals(1L)));
+        assertTrue(result.stream().anyMatch(d -> d.getId().equals(2L)));
+        verify(discountRepository, times(1)).findAll(pageable);
     }
 }
