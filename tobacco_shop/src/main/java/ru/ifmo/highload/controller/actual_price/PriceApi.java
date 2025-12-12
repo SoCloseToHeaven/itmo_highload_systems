@@ -18,7 +18,7 @@ public interface PriceApi {
 
     @Operation(summary = "Создать цену", description = "Создать новую цену для товара")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Цена успешно создана"),
+            @ApiResponse(responseCode = "201", description = "Цена успешно создана"),
             @ApiResponse(responseCode = "404", description = "Товар не найден"),
             @ApiResponse(responseCode = "409", description = "Цена для этого товара уже существует")
     })
@@ -38,7 +38,7 @@ public interface PriceApi {
 
     @Operation(summary = "Удалить цену по ID", description = "Удалить цену по ее ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Цена успешно удалена"),
+            @ApiResponse(responseCode = "204", description = "Цена успешно удалена"),
             @ApiResponse(responseCode = "404", description = "Цена не найдена")
     })
     @DeleteMapping("/{priceId}")
@@ -57,7 +57,7 @@ public interface PriceApi {
 
     @Operation(summary = "Удалить цену по ID товара", description = "Удалить цену для конкретного товара")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Цена успешно удалена"),
+            @ApiResponse(responseCode = "204", description = "Цена успешно удалена"),
             @ApiResponse(responseCode = "404", description = "Цена для этого товара не найдена")
     })
     @DeleteMapping("/product/{productId}")

@@ -16,4 +16,6 @@ public interface PriceService {
     void deletePriceByProductId(Long productId);
 
     Integer getCurrentPriceForProduct(Long productId);
+
+    PriceResponse getPriceById(Long priceId);
 }

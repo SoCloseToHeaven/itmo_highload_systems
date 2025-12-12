@@ -36,6 +36,6 @@ public class CategoryController implements CategoryApi {
     @Override
     public ResponseEntity<Void> deleteCategory(Long id) {
         categoryService.deleteCategory(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

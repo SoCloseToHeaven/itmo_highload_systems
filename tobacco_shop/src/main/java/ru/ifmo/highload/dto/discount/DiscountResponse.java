@@ -17,9 +17,9 @@ public class DiscountResponse {
     @Schema(description = "ID актуальной цены", example = "1")
     private Long actualPriceId;
 
-    @Schema(description = "Дата начала действия скидки", example = "2024-01-01T00:00:00")
+    @Schema(description = "Дата начала действия скидки", example = "2025-09-28T03:35:07.528+03:00")
     private ZonedDateTime startDate;
 
-    @Schema(description = "Дата окончания действия скидки", example = "2024-12-31T23:59:59")
+    @Schema(description = "Дата окончания действия скидки", example = "2025-12-28T03:35:07.528+03:00")
     private ZonedDateTime endDate;
 }

@@ -29,7 +29,7 @@ public class PriceController implements PriceApi {
     @Override
     public ResponseEntity<Void> deletePrice(Long priceId) {
         priceService.deletePrice(priceId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @Override
@@ -40,6 +40,6 @@ public class PriceController implements PriceApi {
     @Override
     public ResponseEntity<Void> deletePriceByProduct(Long productId) {
         priceService.deletePriceByProductId(productId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

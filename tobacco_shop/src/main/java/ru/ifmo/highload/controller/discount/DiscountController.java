@@ -31,7 +31,7 @@ public class DiscountController implements DiscountApi {
     @Override
     public ResponseEntity<Void> deleteDiscount(Long discountId) {
         discountService.deleteDiscount(discountId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @Override
