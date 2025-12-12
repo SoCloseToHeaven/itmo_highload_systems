@@ -25,7 +25,7 @@ class Order {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.PENDING;
 
     @Column(name = "created_at")
     private ZonedDateTime createdAt;
@@ -37,9 +37,6 @@ class Order {
     protected void onCreate() {
         createdAt = ZonedDateTime.now();
         updatedAt = ZonedDateTime.now();
-        if (status == null) {
-            status = OrderStatus.PENDING;
-        }
     }
 
     @PreUpdate
