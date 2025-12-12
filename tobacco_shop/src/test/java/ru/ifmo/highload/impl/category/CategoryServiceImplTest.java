@@ -168,6 +168,30 @@ class CategoryServiceImplTest {
     }
 
     @Test
+    void updateCategory_WhenCyclicalDependency_ShouldThrowException() {
+        // Сценарий: Обновление существующей категории
+        Long categoryId = 1L;
+        CategoryUpdateRequest request = new CategoryUpdateRequest();
+        request.setName("Обновленная категория");
+        request.setParentCategoryId(categoryId);
+
+        Category existingCategory = new Category();
+        existingCategory.setId(categoryId);
+        existingCategory.setName("Старая категория");
+
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(existingCategory));
+        when(categoryRepository
+                .existsById(categoryId))
+                .thenReturn(true);
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> categoryService.updateCategory(categoryId, request));
+
+        assertEquals("Циклическая зависимость недопустима", exception.getMessage());
+        verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
     void updateCategory_WhenCategoryNotExists_ShouldThrowException() {
         // Сценарий: Попытка обновления несуществующей категории
         Long categoryId = 999L;
