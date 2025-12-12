@@ -23,7 +23,12 @@ public interface ProductApi {
     @GetMapping("/category/{categoryId}")
     ResponseEntity<Page<ProductResponse>> getProductsByCategory(
             @Parameter(description = "ID категории") @PathVariable Long categoryId,
-            @Parameter(description = "Параметры пагинации") Pageable pageable);
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 
     @Operation(summary = "Получить товар по ID", description = "Получить детальную информацию о товаре по его ID")
     @ApiResponses(value = {
@@ -52,5 +57,10 @@ public interface ProductApi {
     @GetMapping("/search")
     ResponseEntity<Page<ProductResponse>> searchProducts(
             @Parameter(description = "Название товара для поиска") @RequestParam String name,
-            @Parameter(description = "Параметры пагинации") Pageable pageable);
+            @Parameter(description = "Параметры пагинации", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""") Pageable pageable);
 }
