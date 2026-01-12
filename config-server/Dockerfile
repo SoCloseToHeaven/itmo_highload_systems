@@ -1,5 +1,15 @@
+# Build stage
+FROM amazoncorretto:17 AS build
+WORKDIR /
+COPY . .
+# Для тестов нужен докер; мы не будем запускать докер в докере
+RUN ./gradlew build -x test --no-daemon
+
+# Package stage
 FROM amazoncorretto:17
+ENV JAR_NAME=config-server.jar
 WORKDIR /
 # Копируем готовый JAR файл из контекста сборки
-COPY build/libs/*.jar /config-server.jar
-ENTRYPOINT ["java","-jar","config-server.jar"]
+COPY --from=build build/libs/*.jar /config-server.jar
+EXPOSE 8080
+ENTRYPOINT exec java -jar config-server.jar
