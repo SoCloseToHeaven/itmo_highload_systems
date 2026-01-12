@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: price-service
+  r2dbc:
+    url: r2dbc:postgresql://postgres-price:5432/price_db
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:root}
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+feign:
+  circuitbreaker:
+    enabled: true
+
