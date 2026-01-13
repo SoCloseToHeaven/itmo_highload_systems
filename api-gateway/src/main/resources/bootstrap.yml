@@ -21,12 +21,12 @@ eureka:
     # Не блокировать старт приложения, если Eureka недоступна
     should-on-demand-update-status-change: true
     should-unregister-on-shutdown: true
-    # Интервалы для быстрого подключения
-    initial-instance-info-replication-interval-seconds: 3
-    instance-info-replication-interval-seconds: 3
-    registry-fetch-interval-seconds: 3
+    # Интервалы для подключения (увеличены для уменьшения нагрузки)
+    initial-instance-info-replication-interval-seconds: 10
+    instance-info-replication-interval-seconds: 10
+    registry-fetch-interval-seconds: 10
     # Retry для подключения к Eureka
-    eureka-service-url-poll-interval-seconds: 5
+    eureka-service-url-poll-interval-seconds: 10
   instance:
     prefer-ip-address: true
     # Быстрая регистрация и обновление

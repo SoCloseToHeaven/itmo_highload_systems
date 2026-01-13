@@ -29,3 +29,9 @@ feign:
   circuitbreaker:
     enabled: true
 
+logging:
+  level:
+    com.netflix.discovery: WARN
+    com.netflix.eureka: WARN
+    c.n.d.s.r.aws.ConfigClusterResolver: WARN
+
