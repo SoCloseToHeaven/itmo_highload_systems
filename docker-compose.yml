@@ -9,6 +9,8 @@ services:
       - "8761:8761"
     networks:
       - microservices-net
+    volumes:
+      - gradle-cache:/root/.gradle
 
   # Config Server
   config-server:
@@ -22,6 +24,8 @@ services:
       - microservices-net
     environment:
       - SPRING_PROFILES_ACTIVE=native
+    volumes:
+      - gradle-cache:/root/.gradle
 
   # PostgreSQL databases
   postgres-product:
@@ -95,8 +99,9 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-root}
-      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
 
   price-service:
     build: ./price-service
@@ -112,8 +117,9 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-root}
-      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
 
   discount-service:
     build: ./discount-service
@@ -131,8 +137,9 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-root}
-      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
 
   order-service:
     build: ./order-service
@@ -150,8 +157,9 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-root}
-      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
 
   # API Gateway
   api-gateway:
@@ -169,8 +177,9 @@ services:
     networks:
       - microservices-net
     environment:
-      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
 
 networks:
   microservices-net:
@@ -181,3 +190,4 @@ volumes:
   postgres-price-data:
   postgres-discount-data:
   postgres-order-data:
+  gradle-cache:  # Общий кэш для Gradle зависимостей всех сервисов
