@@ -15,51 +15,65 @@ import ru.ifmo.highload.product.dto.category.CategoryCreateRequest;
 import ru.ifmo.highload.product.dto.category.CategoryResponse;
 import ru.ifmo.highload.product.dto.category.CategoryUpdateRequest;
 
-@Tag(name = "Управление категориями", description = "API для управления категориями товаров")
+/**
+ * Category management API
+ */
+@Tag(name = "Category Management", description = "API for managing product categories")
 public interface CategoryApi {
 
-    @Operation(summary = "Получить все категории", description = "Получить paginated список всех категорий")
+    /**
+     * Get paginated list of all categories
+     */
+    @Operation(summary = "Get all categories", description = "Get paginated list of all categories")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Категории успешно получены")
+            @ApiResponse(responseCode = "200", description = "Categories successfully retrieved")
     })
     @GetMapping
     ResponseEntity<Page<CategoryResponse>> getCategories(
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
 
-    @Operation(summary = "Создать категорию", description = "Создать новую категорию товаров")
+    /**
+     * Create a new product category
+     */
+    @Operation(summary = "Create category", description = "Create a new product category")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Категория успешно создана"),
-            @ApiResponse(responseCode = "400", description = "Неверные данные"),
-            @ApiResponse(responseCode = "409", description = "Категория с таким именем уже существует")
+            @ApiResponse(responseCode = "201", description = "Category successfully created"),
+            @ApiResponse(responseCode = "400", description = "Invalid data"),
+            @ApiResponse(responseCode = "409", description = "Category with this name already exists")
     })
     @PostMapping
     ResponseEntity<CategoryResponse> createCategory(
-            @Parameter(description = "Данные для создания категории") @Valid @RequestBody CategoryCreateRequest request);
+            @Parameter(description = "Category creation data") @Valid @RequestBody CategoryCreateRequest request);
 
-    @Operation(summary = "Обновить категорию", description = "Обновить существующую категорию")
+    /**
+     * Update existing category
+     */
+    @Operation(summary = "Update category", description = "Update existing category")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Категория успешно обновлена"),
-            @ApiResponse(responseCode = "404", description = "Категория не найдена"),
-            @ApiResponse(responseCode = "400", description = "Неверные данные")
+            @ApiResponse(responseCode = "200", description = "Category successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Category not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid data")
     })
     @PutMapping("/{id}")
     ResponseEntity<CategoryResponse> updateCategory(
-            @Parameter(description = "ID категории для обновления") @PathVariable Long id,
-            @Parameter(description = "Обновленные данные категории") @Valid @RequestBody CategoryUpdateRequest request);
+            @Parameter(description = "Category ID to update") @PathVariable Long id,
+            @Parameter(description = "Updated category data") @Valid @RequestBody CategoryUpdateRequest request);
 
-    @Operation(summary = "Удалить категорию", description = "Удалить категорию по ID")
+    /**
+     * Delete category by ID
+     */
+    @Operation(summary = "Delete category", description = "Delete category by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Категория успешно удалена"),
-            @ApiResponse(responseCode = "404", description = "Категория не найдена"),
-            @ApiResponse(responseCode = "409", description = "Невозможно удалить категорию с дочерними категориями")
+            @ApiResponse(responseCode = "204", description = "Category successfully deleted"),
+            @ApiResponse(responseCode = "404", description = "Category not found"),
+            @ApiResponse(responseCode = "409", description = "Cannot delete category with child categories")
     })
     @DeleteMapping("/{id}")
     ResponseEntity<Void> deleteCategory(
-            @Parameter(description = "ID категории для удаления") @PathVariable Long id);
+            @Parameter(description = "Category ID to delete") @PathVariable Long id);
 }
-

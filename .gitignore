@@ -1,9 +1,34 @@
+# Gradle
 /.gradle/
-/.idea/
-
-/**/build/
 **/.gradle/
-
-gradle
+gradle/
 gradlew
 gradlew.bat
+
+# IDE
+/.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build directories
+/**/build/
+/**/out/
+/**/target/
+/**/libs/
+/**/classes/
+/**/generated/
+/**/tmp/
+/**/resolvedMainClassName
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

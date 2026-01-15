@@ -15,77 +15,100 @@ import ru.ifmo.highload.price.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.price.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.price.dto.actual_price.PriceUpdateRequest;
 
-@Tag(name = "Управление ценами", description = "API для управления ценами товаров (для администраторов)")
+/**
+ * Price management API for administrators
+ */
+@Tag(name = "Price Management", description = "API for managing product prices (for administrators)")
 public interface PriceApi {
 
-    @Operation(summary = "Создать цену", description = "Создать новую цену для товара")
+    /**
+     * Create a new price for a product
+     */
+    @Operation(summary = "Create price", description = "Create a new price for a product")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Цена успешно создана"),
-            @ApiResponse(responseCode = "404", description = "Товар не найден"),
-            @ApiResponse(responseCode = "409", description = "Цена для этого товара уже существует")
+            @ApiResponse(responseCode = "201", description = "Price successfully created"),
+            @ApiResponse(responseCode = "404", description = "Product not found"),
+            @ApiResponse(responseCode = "409", description = "Price for this product already exists")
     })
     @PostMapping
     Mono<ResponseEntity<PriceResponse>> createPrice(
-            @Parameter(description = "Данные для создания цены") @Valid @RequestBody PriceCreateRequest request);
+            @Parameter(description = "Price creation data") @Valid @RequestBody PriceCreateRequest request);
 
-    @Operation(summary = "Обновить цену по ID", description = "Обновить существующую цену по ее ID")
+    /**
+     * Update existing price by its ID
+     */
+    @Operation(summary = "Update price by ID", description = "Update existing price by its ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Цена успешно обновлена"),
-            @ApiResponse(responseCode = "404", description = "Цена не найдена")
+            @ApiResponse(responseCode = "200", description = "Price successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Price not found")
     })
     @PutMapping("/{priceId}")
     Mono<ResponseEntity<PriceResponse>> updatePrice(
-            @Parameter(description = "ID цены для обновления") @PathVariable Long priceId,
-            @Parameter(description = "Обновленные данные цены") @Valid @RequestBody PriceUpdateRequest request);
+            @Parameter(description = "Price ID to update") @PathVariable Long priceId,
+            @Parameter(description = "Updated price data") @Valid @RequestBody PriceUpdateRequest request);
 
-    @Operation(summary = "Удалить цену по ID", description = "Удалить цену по ее ID")
+    /**
+     * Delete price by its ID
+     */
+    @Operation(summary = "Delete price by ID", description = "Delete price by its ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Цена успешно удалена"),
-            @ApiResponse(responseCode = "404", description = "Цена не найдена")
+            @ApiResponse(responseCode = "204", description = "Price successfully deleted"),
+            @ApiResponse(responseCode = "404", description = "Price not found")
     })
     @DeleteMapping("/{priceId}")
     Mono<ResponseEntity<Void>> deletePrice(
-            @Parameter(description = "ID цены для удаления") @PathVariable Long priceId);
+            @Parameter(description = "Price ID to delete") @PathVariable Long priceId);
 
-    @Operation(summary = "Обновить цену по ID товара", description = "Обновить цену для конкретного товара")
+    /**
+     * Update price for a specific product
+     */
+    @Operation(summary = "Update price by product ID", description = "Update price for a specific product")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Цена успешно обновлена"),
-            @ApiResponse(responseCode = "404", description = "Цена для этого товара не найдена")
+            @ApiResponse(responseCode = "200", description = "Price successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Price for this product not found")
     })
     @PutMapping("/product/{productId}")
     Mono<ResponseEntity<PriceResponse>> updatePriceByProduct(
-            @Parameter(description = "ID товара") @PathVariable Long productId,
-            @Parameter(description = "Обновленные данные цены") @Valid @RequestBody PriceUpdateRequest request);
+            @Parameter(description = "Product ID") @PathVariable Long productId,
+            @Parameter(description = "Updated price data") @Valid @RequestBody PriceUpdateRequest request);
 
-    @Operation(summary = "Удалить цену по ID товара", description = "Удалить цену для конкретного товара")
+    /**
+     * Delete price for a specific product
+     */
+    @Operation(summary = "Delete price by product ID", description = "Delete price for a specific product")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Цена успешно удалена"),
-            @ApiResponse(responseCode = "404", description = "Цена для этого товара не найдена")
+            @ApiResponse(responseCode = "204", description = "Price successfully deleted"),
+            @ApiResponse(responseCode = "404", description = "Price for this product not found")
     })
     @DeleteMapping("/product/{productId}")
     Mono<ResponseEntity<Void>> deletePriceByProduct(
-            @Parameter(description = "ID товара") @PathVariable Long productId);
+            @Parameter(description = "Product ID") @PathVariable Long productId);
 
-    @Operation(summary = "Получить текущую цену по ID товара", description = "Получить текущую цену для конкретного товара")
+    /**
+     * Get current price for a specific product
+     */
+    @Operation(summary = "Get current price by product ID", description = "Get current price for a specific product")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Цена успешно получена"),
-            @ApiResponse(responseCode = "404", description = "Цена для этого товара не найдена")
+            @ApiResponse(responseCode = "200", description = "Price successfully retrieved"),
+            @ApiResponse(responseCode = "404", description = "Price for this product not found")
     })
     @GetMapping("/product/{productId}/current")
     Mono<ResponseEntity<Integer>> getCurrentPriceForProduct(
-            @Parameter(description = "ID товара") @PathVariable Long productId);
+            @Parameter(description = "Product ID") @PathVariable Long productId);
 
-    @Operation(summary = "Получить все цены", description = "Получить paginated список цен")
+    /**
+     * Get paginated list of all prices
+     */
+    @Operation(summary = "Get all prices", description = "Get paginated list of all prices")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Цены успешно получены")
+            @ApiResponse(responseCode = "200", description = "Prices successfully retrieved")
     })
     @GetMapping
     Mono<ResponseEntity<Page<PriceResponse>>> getAllPrices(
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
 }
-

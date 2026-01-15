@@ -69,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
 
             orderProducts.add(orderProduct);
 
-            // Обновляем остаток через сервис продуктов
+            // Update stock through product service
             ProductUpdateRequest updateRequest = new ProductUpdateRequest();
             updateRequest.setName(productResponse.getName());
             updateRequest.setDescription(productResponse.getDescription());
@@ -114,21 +114,25 @@ public class OrderServiceImpl implements OrderService {
         return toOrderResponse(updated);
     }
 
+    /**
+     * Get paginated list of orders for a specific user.
+     * Currently returns all orders (user filtering will be implemented in future)
+     */
     @Override
     public Mono<Page<OrderResponse>> getUserOrders(Long userId, Pageable pageable) {
         return Mono.fromCallable(() -> {
-            // Временная реализация - возвращаем все заказы
-            // В 3-й лабе добавим фильтрацию по пользователю
             Page<Order> orders = orderRepository.findAll(pageable);
             return orders.map(this::toOrderResponse);
         });
     }
 
+    /**
+     * Get paginated list of orders for the current user.
+     * Currently returns all orders (user filtering will be implemented in future)
+     */
     @Override
     public Mono<Page<OrderResponse>> getMyOrders(Pageable pageable) {
         return Mono.fromCallable(() -> {
-            // Временная реализация - возвращаем все заказы
-            // В 3-й лабе добавим фильтрацию по текущему пользователю
             Page<Order> orders = orderRepository.findAll(pageable);
             return orders.map(this::toOrderResponse);
         });

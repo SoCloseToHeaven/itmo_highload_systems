@@ -12,69 +12,86 @@ import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.product.dto.product.ProductResponse;
 import ru.ifmo.highload.product.dto.product.ProductUpdateRequest;
 
-@Tag(name = "Управление товарами", description = "API для управления товарами")
+/**
+ * Product management API
+ */
+@Tag(name = "Product Management", description = "API for managing products")
 public interface ProductApi {
 
-    @Operation(summary = "Получить товары по категории", description = "Получить paginated список товаров для определенной категории")
+    /**
+     * Get paginated list of products for a specific category
+     */
+    @Operation(summary = "Get products by category", description = "Get paginated list of products for a specific category")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Товары успешно получены"),
-            @ApiResponse(responseCode = "404", description = "Категория не найдена")
+            @ApiResponse(responseCode = "200", description = "Products successfully retrieved"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
     })
     @GetMapping("/category/{categoryId}")
     ResponseEntity<Page<ProductResponse>> getProductsByCategory(
-            @Parameter(description = "ID категории") @PathVariable Long categoryId,
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "Category ID") @PathVariable Long categoryId,
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
 
-    @Operation(summary = "Получить товар по ID", description = "Получить детальную информацию о товаре по его ID")
+    /**
+     * Get product details by ID
+     */
+    @Operation(summary = "Get product by ID", description = "Get detailed product information by its ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Товар успешно получен"),
-            @ApiResponse(responseCode = "404", description = "Товар не найден")
+            @ApiResponse(responseCode = "200", description = "Product successfully retrieved"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     @GetMapping("/{id}")
     ResponseEntity<ProductResponse> getProduct(
-            @Parameter(description = "ID товара") @PathVariable Long id);
+            @Parameter(description = "Product ID") @PathVariable Long id);
 
-    @Operation(summary = "Обновить товар", description = "Обновить информацию о товаре (для администраторов)")
+    /**
+     * Update product information (for administrators)
+     */
+    @Operation(summary = "Update product", description = "Update product information (for administrators)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Товар успешно обновлен"),
-            @ApiResponse(responseCode = "404", description = "Товар не найден"),
-            @ApiResponse(responseCode = "400", description = "Неверные данные")
+            @ApiResponse(responseCode = "200", description = "Product successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Product not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid data")
     })
     @PutMapping("/{id}")
     ResponseEntity<ProductResponse> updateProduct(
-            @Parameter(description = "ID товара для обновления") @PathVariable Long id,
-            @Parameter(description = "Обновленные данные товара") @RequestBody ProductUpdateRequest request);
+            @Parameter(description = "Product ID to update") @PathVariable Long id,
+            @Parameter(description = "Updated product data") @RequestBody ProductUpdateRequest request);
 
-    @Operation(summary = "Поиск товаров", description = "Поиск товаров по названию с пагинацией")
+    /**
+     * Search products by name with pagination
+     */
+    @Operation(summary = "Search products", description = "Search products by name with pagination")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Товары успешно получены")
+            @ApiResponse(responseCode = "200", description = "Products successfully retrieved")
     })
     @GetMapping("/search")
     ResponseEntity<Page<ProductResponse>> searchProducts(
-            @Parameter(description = "Название товара для поиска") @RequestParam String name,
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "Product name to search") @RequestParam String name,
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
 
-    @Operation(summary = "Получить все продукты", description = "Получить paginated список продуктов")
+    /**
+     * Get paginated list of all products
+     */
+    @Operation(summary = "Get all products", description = "Get paginated list of all products")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Продукты успешно получены")
+            @ApiResponse(responseCode = "200", description = "Products successfully retrieved")
     })
     @GetMapping
     ResponseEntity<Page<ProductResponse>> getAllProducts(
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
 }
-

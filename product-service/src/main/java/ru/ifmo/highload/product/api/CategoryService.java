@@ -16,7 +16,5 @@ public interface CategoryService {
     CategoryResponse updateCategory(Long id, CategoryUpdateRequest request);
 
     void deleteCategory(Long id);
-
-    Page<CategoryResponse> getRootCategories(Pageable pageable);
 }
 

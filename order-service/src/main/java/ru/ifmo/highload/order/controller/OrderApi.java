@@ -15,73 +15,94 @@ import ru.ifmo.highload.order.dto.order.OrderCreateRequest;
 import ru.ifmo.highload.order.dto.order.OrderResponse;
 import ru.ifmo.highload.order.dto.order.OrderStatus;
 
-@Tag(name = "Управление заказами", description = "API для управления заказами")
+/**
+ * Order management API
+ */
+@Tag(name = "Order Management", description = "API for managing orders")
 public interface OrderApi {
 
-    @Operation(summary = "Создать заказ", description = "Создать новый заказ с поддержкой транзакций")
+    /**
+     * Create a new order with transaction support
+     */
+    @Operation(summary = "Create order", description = "Create a new order with transaction support")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
-            @ApiResponse(responseCode = "400", description = "Неверные данные заказа или недостаточно товара"),
-            @ApiResponse(responseCode = "404", description = "Товар не найден")
+            @ApiResponse(responseCode = "201", description = "Order successfully created"),
+            @ApiResponse(responseCode = "400", description = "Invalid order data or insufficient stock"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     @PostMapping
     Mono<ResponseEntity<OrderResponse>> createOrder(
-            @Parameter(description = "Данные для создания заказа") @Valid @RequestBody OrderCreateRequest request);
+            @Parameter(description = "Order creation data") @Valid @RequestBody OrderCreateRequest request);
 
-    @Operation(summary = "Получить заказ по ID", description = "Получить детальную информацию о заказе по его ID")
+    /**
+     * Get order details by ID
+     */
+    @Operation(summary = "Get order by ID", description = "Get detailed order information by its ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Заказ успешно получен"),
-            @ApiResponse(responseCode = "404", description = "Заказ не найден")
+            @ApiResponse(responseCode = "200", description = "Order successfully retrieved"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
     })
     @GetMapping("/{orderId}")
     Mono<ResponseEntity<OrderResponse>> getOrder(
-            @Parameter(description = "ID заказа") @PathVariable Long orderId);
+            @Parameter(description = "Order ID") @PathVariable Long orderId);
 
-    @Operation(summary = "Обновить статус заказа", description = "Обновить статус заказа (отмена, завершение и т.д.) с поддержкой транзакций")
+    /**
+     * Update order status (cancellation, completion, etc.) with transaction support
+     */
+    @Operation(summary = "Update order status", description = "Update order status (cancellation, completion, etc.) with transaction support")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Статус заказа успешно обновлен"),
-            @ApiResponse(responseCode = "404", description = "Заказ не найден"),
-            @ApiResponse(responseCode = "400", description = "Неверный переход статуса")
+            @ApiResponse(responseCode = "200", description = "Order status successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Order not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid status transition")
     })
     @PutMapping("/{orderId}")
     Mono<ResponseEntity<OrderResponse>> updateOrder(
-            @Parameter(description = "ID заказа для обновления") @PathVariable Long orderId,
-            @Parameter(description = "Новый статус заказа") @RequestBody OrderStatus status);
+            @Parameter(description = "Order ID to update") @PathVariable Long orderId,
+            @Parameter(description = "New order status") @RequestBody OrderStatus status);
 
-    @Operation(summary = "Получить заказы пользователя", description = "Получить paginated список заказов для конкретного пользователя (для администраторов/поддержки)")
+    /**
+     * Get paginated list of orders for a specific user (for administrators/support)
+     */
+    @Operation(summary = "Get user orders", description = "Get paginated list of orders for a specific user (for administrators/support)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Заказы пользователя успешно получены")
+            @ApiResponse(responseCode = "200", description = "User orders successfully retrieved")
     })
     @GetMapping("/user/{userId}")
     Mono<ResponseEntity<Page<OrderResponse>>> getUserOrders(
-            @Parameter(description = "ID пользователя") @PathVariable Long userId,
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "User ID") @PathVariable Long userId,
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
 
-    @Operation(summary = "Получить мои заказы", description = "Получить paginated список заказов текущего пользователя")
+    /**
+     * Get paginated list of orders for the current user
+     */
+    @Operation(summary = "Get my orders", description = "Get paginated list of orders for the current user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Заказы пользователя успешно получены")
+            @ApiResponse(responseCode = "200", description = "User orders successfully retrieved")
     })
     @GetMapping("/my")
     Mono<ResponseEntity<Page<OrderResponse>>> getMyOrders(
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
 
-    @Operation(summary = "Получить все заказы", description = "Получить paginated список заказов")
+    /**
+     * Get paginated list of all orders
+     */
+    @Operation(summary = "Get all orders", description = "Get paginated list of all orders")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Заказы успешно получены")
+            @ApiResponse(responseCode = "200", description = "Orders successfully retrieved")
     })
     @GetMapping
     Mono<ResponseEntity<Page<OrderResponse>>> getAllOrders(
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,

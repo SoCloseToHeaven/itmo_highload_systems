@@ -116,15 +116,18 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAll(pageable).map(this::toProductResponse);
     }
 
+    /**
+     * Convert Product entity to ProductResponse DTO
+     * Retrieves product categories through ProductCategoryRepository
+     */
     private ProductResponse toProductResponse(Product product) {
-        // Получаем категории продукта через ProductCategoryRepository
         List<ProductCategory> productCategories = productCategoryRepository.findByProductId(product.getId());
         List<CategoryResponse> categories = productCategories.stream()
                 .map(pc -> {
                     try {
                         return categoryService.getCategoryById(pc.getCategoryId());
                     } catch (RuntimeException e) {
-                        return null; // Пропускаем несуществующие категории
+                        return null; // Skip non-existent categories
                     }
                 })
                 .filter(Objects::nonNull)

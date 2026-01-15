@@ -222,6 +222,83 @@ class DiscountServiceImplTest {
     }
 
     @Test
+    void createDiscount_WhenPriceNotExists_ShouldThrowException() {
+        DiscountCreateRequest request = new DiscountCreateRequest();
+        request.setProductId(1L);
+        request.setActualPriceId(999L);
+        request.setStartDate(ZonedDateTime.now().plusDays(1));
+        request.setEndDate(ZonedDateTime.now().plusDays(10));
+
+        ProductResponse product = new ProductResponse();
+        product.setId(1L);
+
+        when(productServiceClient.getProductById(1L)).thenReturn(product);
+        when(priceServiceClient.getPriceById(999L))
+                .thenThrow(new RuntimeException("Price not found"));
+
+        assertThrows(ResourceNotFoundException.class, () -> discountService.createDiscount(request));
+        verify(discountRepository, never()).save(any(Discount.class));
+    }
+
+    @Test
+    void updateDiscount_WithInvalidDateRange_ShouldThrowException() {
+        Long discountId = 1L;
+        DiscountUpdateRequest request = new DiscountUpdateRequest();
+        request.setStartDate(ZonedDateTime.now().plusDays(10));
+        request.setEndDate(ZonedDateTime.now().plusDays(1)); // Конечная дата раньше начальной
+        request.setActualPriceId(1L);
+
+        Discount existingDiscount = new Discount();
+        existingDiscount.setId(discountId);
+
+        PriceResponse price = new PriceResponse();
+        price.setId(1L);
+
+        when(discountRepository.findById(discountId)).thenReturn(Optional.of(existingDiscount));
+        when(priceServiceClient.getPriceById(1L)).thenReturn(price);
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+                () -> discountService.updateDiscount(discountId, request));
+
+        assertEquals("Дата конца должна быть позже даты начала", exception.getMessage());
+        verify(discountRepository, never()).save(any(Discount.class));
+    }
+
+    @Test
+    void updateDiscount_WhenPriceNotExists_ShouldThrowException() {
+        Long discountId = 1L;
+        DiscountUpdateRequest request = new DiscountUpdateRequest();
+        request.setStartDate(ZonedDateTime.now().plusDays(1));
+        request.setEndDate(ZonedDateTime.now().plusDays(10));
+        request.setActualPriceId(999L);
+
+        Discount existingDiscount = new Discount();
+        existingDiscount.setId(discountId);
+        existingDiscount.setProductId(1L);
+        existingDiscount.setActualPriceId(1L);
+
+        when(discountRepository.findById(discountId)).thenReturn(Optional.of(existingDiscount));
+        when(priceServiceClient.getPriceById(999L))
+                .thenThrow(new RuntimeException("Price not found"));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> discountService.updateDiscount(discountId, request));
+        verify(discountRepository, never()).save(any(Discount.class));
+    }
+
+    @Test
+    void getActiveDiscounts_WhenNoActiveDiscounts_ShouldReturnEmptyList() {
+        when(discountRepository.findByStartDateBeforeAndEndDateAfter(any(ZonedDateTime.class), any(ZonedDateTime.class)))
+                .thenReturn(List.of());
+
+        List<DiscountResponse> result = discountService.getActiveDiscounts();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(discountRepository, times(1)).findByStartDateBeforeAndEndDateAfter(any(ZonedDateTime.class), any(ZonedDateTime.class));
+    }
+
+    @Test
     void getAllDiscounts_ShouldReturnDiscounts() {
         ZonedDateTime now = ZonedDateTime.now();
         Discount discount1 = new Discount();
@@ -249,6 +326,20 @@ class DiscountServiceImplTest {
         assertEquals(2, result.getNumberOfElements());
         assertTrue(result.stream().anyMatch(d -> d.getId().equals(1L)));
         assertTrue(result.stream().anyMatch(d -> d.getId().equals(2L)));
+        verify(discountRepository, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void getAllDiscounts_WhenNoDiscounts_ShouldReturnEmptyPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Discount> emptyPage = new PageImpl<>(List.of());
+
+        when(discountRepository.findAll(pageable)).thenReturn(emptyPage);
+
+        Page<DiscountResponse> result = discountService.getAllDiscounts(pageable);
+
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
         verify(discountRepository, times(1)).findAll(pageable);
     }
 }

@@ -17,57 +17,74 @@ import ru.ifmo.highload.discount.dto.discount.DiscountUpdateRequest;
 
 import java.util.List;
 
-@Tag(name = "Управление скидками", description = "API для управления скидками на товары (для администраторов)")
+/**
+ * Discount management API for administrators
+ */
+@Tag(name = "Discount Management", description = "API for managing product discounts (for administrators)")
 public interface DiscountApi {
 
-    @Operation(summary = "Создать скидку", description = "Создать новую скидку для товара")
+    /**
+     * Create a new discount for a product
+     */
+    @Operation(summary = "Create discount", description = "Create a new discount for a product")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Скидка успешно создана"),
-            @ApiResponse(responseCode = "404", description = "Товар или цена не найдены"),
-            @ApiResponse(responseCode = "400", description = "Неверный диапазон дат")
+            @ApiResponse(responseCode = "201", description = "Discount successfully created"),
+            @ApiResponse(responseCode = "404", description = "Product or price not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid date range")
     })
     @PostMapping
     ResponseEntity<DiscountResponse> createDiscount(
-            @Parameter(description = "Данные для создания скидки") @Valid @RequestBody DiscountCreateRequest request);
+            @Parameter(description = "Discount creation data") @Valid @RequestBody DiscountCreateRequest request);
 
-    @Operation(summary = "Обновить скидку", description = "Обновить существующую скидку")
+    /**
+     * Update existing discount
+     */
+    @Operation(summary = "Update discount", description = "Update existing discount")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Скидка успешно обновлена"),
-            @ApiResponse(responseCode = "404", description = "Скидка не найдена"),
-            @ApiResponse(responseCode = "400", description = "Неверный диапазон дат")
+            @ApiResponse(responseCode = "200", description = "Discount successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Discount not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid date range")
     })
     @PutMapping("/{discountId}")
     ResponseEntity<DiscountResponse> updateDiscount(
-            @Parameter(description = "ID скидки для обновления") @PathVariable Long discountId,
-            @Parameter(description = "Обновленные данные скидки") @Valid @RequestBody DiscountUpdateRequest request);
+            @Parameter(description = "Discount ID to update") @PathVariable Long discountId,
+            @Parameter(description = "Updated discount data") @Valid @RequestBody DiscountUpdateRequest request);
 
-    @Operation(summary = "Удалить скидку", description = "Удалить скидку по ID")
+    /**
+     * Delete discount by ID
+     */
+    @Operation(summary = "Delete discount", description = "Delete discount by ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Скидка успешно удалена"),
-            @ApiResponse(responseCode = "404", description = "Скидка не найдена")
+            @ApiResponse(responseCode = "204", description = "Discount successfully deleted"),
+            @ApiResponse(responseCode = "404", description = "Discount not found")
     })
     @DeleteMapping("/{discountId}")
     ResponseEntity<Void> deleteDiscount(
-            @Parameter(description = "ID скидки для удаления") @PathVariable Long discountId);
+            @Parameter(description = "Discount ID to delete") @PathVariable Long discountId);
 
-    @Operation(summary = "Получить активные скидки", description = "Получить список текущих активных скидок")
+    /**
+     * Get list of currently active discounts
+     */
+    @Operation(summary = "Get active discounts", description = "Get list of currently active discounts")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Активные скидки успешно получены")
+            @ApiResponse(responseCode = "200", description = "Active discounts successfully retrieved")
     })
     @GetMapping("/active")
     ResponseEntity<List<DiscountResponse>> getActiveDiscounts();
 
-    @Operation(summary = "Получить все скидки", description = "Получить paginated список скидок")
+    /**
+     * Get paginated list of all discounts
+     */
+    @Operation(summary = "Get all discounts", description = "Get paginated list of all discounts")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Скидки успешно получены")
+            @ApiResponse(responseCode = "200", description = "Discounts successfully retrieved")
     })
     @GetMapping
     ResponseEntity<Page<DiscountResponse>> getAllDiscounts(
-            @Parameter(description = "Параметры пагинации", example = """
+            @Parameter(description = "Pagination parameters", example = """
                     {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
 }
-
