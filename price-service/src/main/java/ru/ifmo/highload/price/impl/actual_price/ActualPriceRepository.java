@@ -16,5 +16,8 @@ interface ActualPriceRepository extends R2dbcRepository<ActualPrice, Long> {
 
     @Query("SELECT EXISTS(SELECT 1 FROM actual_price WHERE product_id = :productId)")
     Mono<Boolean> existsByProductId(@Param("productId") Long productId);
+
+    @Query("SELECT EXISTS(SELECT 1 FROM actual_price WHERE id = :id)")
+    Mono<Boolean> existsById(@Param("id") Long id);
 }
 

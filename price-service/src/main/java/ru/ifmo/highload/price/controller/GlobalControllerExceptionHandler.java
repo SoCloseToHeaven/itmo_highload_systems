@@ -87,5 +87,19 @@ public class GlobalControllerExceptionHandler {
         response.setTimestamp(ZonedDateTime.now());
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
     }
+
+    @ExceptionHandler(Exception.class)
+    public Mono<ResponseEntity<HttpErrorResponse>> handleGenericException(Exception ex, org.springframework.web.server.ServerWebExchange exchange) {
+        HttpErrorResponse response = new HttpErrorResponse();
+        response.setError("Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.setPath(exchange.getRequest().getURI().getPath());
+        response.setTimestamp(ZonedDateTime.now());
+        
+        // Логируем реальную ошибку для разработчиков
+        ex.printStackTrace();
+        
+        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
+    }
 }
 

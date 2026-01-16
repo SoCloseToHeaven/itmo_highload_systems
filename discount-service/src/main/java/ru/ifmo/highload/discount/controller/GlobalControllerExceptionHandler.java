@@ -153,5 +153,21 @@ public class GlobalControllerExceptionHandler {
         response.setTimestamp(ZonedDateTime.now());
         return response;
     }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    HttpErrorResponse handleGenericException(HttpServletRequest req, Exception ex) {
+        HttpErrorResponse response = new HttpErrorResponse();
+        response.setError("Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.setPath(req.getRequestURI());
+        response.setTimestamp(ZonedDateTime.now());
+        
+        // Логируем реальную ошибку для разработчиков
+        ex.printStackTrace();
+        
+        return response;
+    }
 }
 

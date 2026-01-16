@@ -47,6 +47,11 @@ public abstract class TestcontainersConfiguration {
         registry.add("spring.r2dbc.url", () -> r2dbcUrl);
         registry.add("spring.r2dbc.username", postgres::getUsername);
         registry.add("spring.r2dbc.password", postgres::getPassword);
+        
+        // JDBC для Liquibase миграций
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.liquibase.enabled", () -> "true");
         
         // Disable Spring Cloud Config
@@ -61,10 +66,14 @@ public abstract class TestcontainersConfiguration {
     }
 
     protected void setupMockProductService() {
-        ProductResponse product = new ProductResponse();
-        product.setId(1L);
-        product.setName("Test Product");
-        when(productServiceClient.getProductById(anyLong())).thenReturn(product);
+        // Настраиваем мок для любого productId
+        when(productServiceClient.getProductById(anyLong())).thenAnswer(invocation -> {
+            Long productId = invocation.getArgument(0);
+            ProductResponse product = new ProductResponse();
+            product.setId(productId);
+            product.setName("Test Product " + productId);
+            return product;
+        });
     }
 }
 

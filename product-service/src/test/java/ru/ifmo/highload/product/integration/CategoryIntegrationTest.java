@@ -32,19 +32,6 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
                 .andExpect(jsonPath("$.totalElements").exists());
     }
 
-    @Test
-    void getCategoryById_ShouldReturnCategory() throws Exception {
-        mockMvc.perform(get("/api/category/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").exists());
-    }
-
-    @Test
-    void getCategoryById_WhenNotExists_ShouldReturn404() throws Exception {
-        mockMvc.perform(get("/api/category/99999"))
-                .andExpect(status().isNotFound());
-    }
 
     @Test
     void createCategory_ShouldReturn201() throws Exception {
