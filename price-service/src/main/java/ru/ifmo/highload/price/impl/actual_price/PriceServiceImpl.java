@@ -27,9 +27,9 @@ public class PriceServiceImpl implements PriceService {
     @Override
     public Mono<PriceResponse> createPrice(PriceCreateRequest request) {
         return Mono.fromCallable(() -> productServiceClient.getProductById(request.getProductId()))
-                .flatMap(product -> actualPriceRepository.existsByProductId(request.getProductId())
-                        .flatMap(exists -> {
-                            if (exists) {
+                .flatMap(product -> actualPriceRepository.countByProductId(request.getProductId())
+                        .flatMap(count -> {
+                            if (count > 0) {
                                 return Mono.error(new BadRequestException("Для данного продукта цена уже существует"));
                             }
                             ActualPrice price = new ActualPrice();
@@ -74,13 +74,9 @@ public class PriceServiceImpl implements PriceService {
 
     @Override
     public Mono<Void> deletePrice(Long priceId) {
-        return actualPriceRepository.existsById(priceId)
-                .flatMap(exists -> {
-                    if (!exists) {
-                        return Mono.error(new ResourceNotFoundException("Не найдена цена с id: " + priceId));
-                    }
-                    return actualPriceRepository.deleteById(priceId);
-                });
+        return actualPriceRepository.findById(priceId)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Не найдена цена с id: " + priceId)))
+                .flatMap(price -> actualPriceRepository.deleteById(priceId));
     }
 
     @Override

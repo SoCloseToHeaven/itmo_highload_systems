@@ -9,15 +9,22 @@ import reactor.core.publisher.Mono;
 @Repository
 interface ActualPriceRepository extends R2dbcRepository<ActualPrice, Long> {
 
-    Mono<ActualPrice> findByProductId(Long productId);
+    @Query("SELECT * FROM actual_price WHERE product_id = :productId")
+    Mono<ActualPrice> findByProductId(@Param("productId") Long productId);
+
+    @Query("SELECT * FROM actual_price WHERE id = :id")
+    Mono<ActualPrice> findById(@Param("id") Long id);
 
     @Query("DELETE FROM actual_price WHERE product_id = :productId")
     Mono<Void> deleteByProductId(@Param("productId") Long productId);
 
-    @Query("SELECT EXISTS(SELECT 1 FROM actual_price WHERE product_id = :productId)")
-    Mono<Boolean> existsByProductId(@Param("productId") Long productId);
+    @Query("SELECT COUNT(*) FROM actual_price WHERE product_id = :productId")
+    Mono<Long> countByProductId(@Param("productId") Long productId);
 
-    @Query("SELECT EXISTS(SELECT 1 FROM actual_price WHERE id = :id)")
-    Mono<Boolean> existsById(@Param("id") Long id);
+    @Query("SELECT COUNT(*) FROM actual_price WHERE id = :id")
+    Mono<Long> countById(@Param("id") Long id);
+
+    @Query("DELETE FROM actual_price WHERE id = :id")
+    Mono<Void> deleteById(@Param("id") Long id);
 }
 

@@ -55,7 +55,7 @@ class PriceServiceImplTest {
         savedPrice.setPrice(45000);
 
         when(productServiceClient.getProductById(1L)).thenReturn(product);
-        when(actualPriceRepository.existsByProductId(1L)).thenReturn(Mono.just(false));
+        when(actualPriceRepository.countByProductId(1L)).thenReturn(Mono.just(0L));
         when(actualPriceRepository.save(any(ActualPrice.class))).thenReturn(Mono.just(savedPrice));
 
         StepVerifier.create(priceService.createPrice(request))
@@ -79,7 +79,7 @@ class PriceServiceImplTest {
         product.setId(1L);
 
         when(productServiceClient.getProductById(1L)).thenReturn(product);
-        when(actualPriceRepository.existsByProductId(1L)).thenReturn(Mono.just(true));
+        when(actualPriceRepository.countByProductId(1L)).thenReturn(Mono.just(1L));
 
         StepVerifier.create(priceService.createPrice(request))
                 .expectError(BadRequestException.class)
@@ -152,7 +152,9 @@ class PriceServiceImplTest {
     @Test
     void deletePrice_WhenPriceExists_ShouldDeletePrice() {
         Long priceId = 1L;
-        when(actualPriceRepository.existsById(priceId)).thenReturn(Mono.just(true));
+        ActualPrice price = new ActualPrice();
+        price.setId(priceId);
+        when(actualPriceRepository.findById(priceId)).thenReturn(Mono.just(price));
         when(actualPriceRepository.deleteById(priceId)).thenReturn(Mono.empty());
 
         StepVerifier.create(priceService.deletePrice(priceId))
@@ -267,7 +269,7 @@ class PriceServiceImplTest {
     @Test
     void deletePrice_WhenPriceNotExists_ShouldThrowException() {
         Long priceId = 999L;
-        when(actualPriceRepository.existsById(priceId)).thenReturn(Mono.just(false));
+        when(actualPriceRepository.findById(priceId)).thenReturn(Mono.empty());
 
         StepVerifier.create(priceService.deletePrice(priceId))
                 .expectError(ResourceNotFoundException.class)

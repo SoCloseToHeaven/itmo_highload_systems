@@ -87,6 +87,21 @@ public class GlobalControllerExceptionHandler {
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public Mono<ResponseEntity<HttpErrorResponse>> handleIllegalStateException(IllegalStateException ex, org.springframework.web.server.ServerWebExchange exchange) {
+        HttpErrorResponse response = new HttpErrorResponse();
+        // Ошибки валидации параметров должны возвращать 400
+        if (ex.getMessage() != null && ex.getMessage().contains("Pageable")) {
+            response.setError("Некорректные параметры пагинации. Используйте параметры page и size.");
+        } else {
+            response.setError("Некорректный запрос: " + ex.getMessage());
+        }
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setPath(exchange.getRequest().getURI().getPath());
+        response.setTimestamp(ZonedDateTime.now());
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
+    }
+
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<HttpErrorResponse>> handleGenericException(Exception ex, org.springframework.web.server.ServerWebExchange exchange) {
         HttpErrorResponse response = new HttpErrorResponse();
