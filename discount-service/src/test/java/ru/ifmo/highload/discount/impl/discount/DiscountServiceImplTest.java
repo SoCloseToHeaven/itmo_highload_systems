@@ -251,11 +251,7 @@ class DiscountServiceImplTest {
         Discount existingDiscount = new Discount();
         existingDiscount.setId(discountId);
 
-        PriceResponse price = new PriceResponse();
-        price.setId(1L);
-
         when(discountRepository.findById(discountId)).thenReturn(Optional.of(existingDiscount));
-        when(priceServiceClient.getPriceById(1L)).thenReturn(price);
 
         BadRequestException exception = assertThrows(BadRequestException.class,
                 () -> discountService.updateDiscount(discountId, request));
