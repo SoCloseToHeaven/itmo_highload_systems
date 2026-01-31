@@ -20,7 +20,6 @@ import ru.ifmo.highload.price.dto.external.product.ProductResponse;
 import ru.ifmo.highload.price.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.price.impl.exceptions.ResourceNotFoundException;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -91,26 +91,12 @@ public class GlobalControllerExceptionHandler {
     @ExceptionHandler(org.springframework.r2dbc.BadSqlGrammarException.class)
     public Mono<ResponseEntity<HttpErrorResponse>> handleBadSqlGrammarException(org.springframework.r2dbc.BadSqlGrammarException ex, org.springframework.web.server.ServerWebExchange exchange) {
         HttpErrorResponse response = new HttpErrorResponse();
-        // SQL ошибки обычно означают проблему с запросом, маппим в 400 или 404 в зависимости от контекста
-        String path = exchange.getRequest().getURI().getPath();
-        String method = exchange.getRequest().getMethod().name();
-        
-        // Если это GET/PUT/DELETE запрос с ID в пути - скорее всего ресурс не найден
-        if (("GET".equals(method) || "PUT".equals(method) || "DELETE".equals(method)) && 
-            (path.matches(".*/\\d+$") || path.matches(".*/\\d+/.*"))) {
-            response.setError("Ресурс не найден");
-            response.setStatus(HttpStatus.NOT_FOUND.value());
-        } else {
-            response.setError("Некорректный запрос");
-            response.setStatus(HttpStatus.BAD_REQUEST.value());
-        }
-        response.setPath(path);
+        // SQL-ошибки (таблица не найдена, ошибка маппинга и т.д.) — не маскируем под 404
+        response.setError("Ошибка доступа к данным: " + (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage()));
+        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.setPath(exchange.getRequest().getURI().getPath());
         response.setTimestamp(ZonedDateTime.now());
-        
-        // Логируем реальную ошибку для разработчиков
-        ex.printStackTrace();
-        
-        return Mono.just(ResponseEntity.status(response.getStatus()).body(response));
+        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
     }
 
     @ExceptionHandler(Exception.class)

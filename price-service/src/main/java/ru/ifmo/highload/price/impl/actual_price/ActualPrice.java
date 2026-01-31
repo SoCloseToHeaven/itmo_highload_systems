@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 @Table("actual_price")
 @Getter
@@ -23,9 +23,9 @@ class ActualPrice {
     private Integer price;
 
     @Column("created_at")
-    private ZonedDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @Column("updated_at")
-    private ZonedDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }
 

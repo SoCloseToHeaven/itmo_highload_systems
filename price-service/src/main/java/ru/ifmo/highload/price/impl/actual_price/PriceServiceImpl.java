@@ -15,7 +15,7 @@ import ru.ifmo.highload.price.dto.actual_price.PriceUpdateRequest;
 import ru.ifmo.highload.price.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.price.impl.exceptions.ResourceNotFoundException;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +35,8 @@ public class PriceServiceImpl implements PriceService {
                             ActualPrice price = new ActualPrice();
                             price.setProductId(request.getProductId());
                             price.setPrice(request.getPrice());
-                            price.setCreatedAt(ZonedDateTime.now());
-                            price.setUpdatedAt(ZonedDateTime.now());
+                            price.setCreatedAt(LocalDateTime.now());
+                            price.setUpdatedAt(LocalDateTime.now());
                             return actualPriceRepository.save(price);
                         }))
                 .onErrorMap(e -> {
@@ -54,7 +54,7 @@ public class PriceServiceImpl implements PriceService {
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Не найдена цена с id: " + priceId)))
                 .flatMap(price -> {
                     price.setPrice(request.getPrice());
-                    price.setUpdatedAt(ZonedDateTime.now());
+                    price.setUpdatedAt(LocalDateTime.now());
                     return actualPriceRepository.save(price);
                 })
                 .map(this::toPriceResponse);
@@ -66,7 +66,7 @@ public class PriceServiceImpl implements PriceService {
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Не найдена цена для продукта с id: " + productId)))
                 .flatMap(price -> {
                     price.setPrice(request.getPrice());
-                    price.setUpdatedAt(ZonedDateTime.now());
+                    price.setUpdatedAt(LocalDateTime.now());
                     return actualPriceRepository.save(price);
                 })
                 .map(this::toPriceResponse);
