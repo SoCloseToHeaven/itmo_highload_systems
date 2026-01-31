@@ -11,6 +11,7 @@ import ru.ifmo.highload.order.config.TestcontainersConfiguration;
 import ru.ifmo.highload.order.dto.order.OrderCreateRequest;
 import ru.ifmo.highload.order.dto.order.OrderItemRequest;
 import ru.ifmo.highload.order.dto.order.OrderStatus;
+import ru.ifmo.highload.order.util.JwtTestHelper;
 
 import java.util.List;
 
@@ -23,13 +24,18 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private String userToken;
+    private String supervisorToken;
+
     @BeforeEach
     void setUp() {
         setupMockClients();
+        userToken = JwtTestHelper.token(JWT_SECRET, 1L, "user1", "USER");
+        supervisorToken = JwtTestHelper.token(JWT_SECRET, 2L, "supervisor", "SUPERVISOR");
     }
 
     @Test
-    void createOrder_ShouldReturn201() throws Exception {
+    void createOrder_AsUser_ShouldReturn201() throws Exception {
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(1L);
         item.setQuantity(2);
@@ -39,6 +45,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/order")
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -50,12 +57,29 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
+    void createOrder_WithoutAuth_ShouldReturn401() throws Exception {
+        OrderItemRequest item = new OrderItemRequest();
+        item.setProductId(1L);
+        item.setQuantity(1);
+        OrderCreateRequest request = new OrderCreateRequest();
+        request.setItems(List.of(item));
+
+        webTestClient.post()
+                .uri("/api/order")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
     void createOrder_WithEmptyItems_ShouldReturn400() throws Exception {
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(List.of());
 
         webTestClient.post()
                 .uri("/api/order")
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -69,6 +93,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/order")
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -77,16 +102,15 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void getOrderById_ShouldReturnOrder() throws Exception {
-        // First create an order
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(1L);
         item.setQuantity(1);
-
         OrderCreateRequest createRequest = new OrderCreateRequest();
         createRequest.setItems(List.of(item));
 
         String response = webTestClient.post()
                 .uri("/api/order")
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -97,9 +121,9 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         Long orderId = objectMapper.readTree(response).get("id").asLong();
 
-        // Then get it
         webTestClient.get()
                 .uri("/api/order/" + orderId)
+                .header("Authorization", "Bearer " + userToken)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -112,22 +136,22 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     void getOrderById_WhenNotExists_ShouldReturn404() throws Exception {
         webTestClient.get()
                 .uri("/api/order/99999")
+                .header("Authorization", "Bearer " + userToken)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
     void updateOrderStatus_ShouldUpdateStatus() throws Exception {
-        // First create an order
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(1L);
         item.setQuantity(1);
-
         OrderCreateRequest createRequest = new OrderCreateRequest();
         createRequest.setItems(List.of(item));
 
         String response = webTestClient.post()
                 .uri("/api/order")
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -138,9 +162,9 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         Long orderId = objectMapper.readTree(response).get("id").asLong();
 
-        // Then update status
         webTestClient.put()
                 .uri("/api/order/" + orderId)
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(OrderStatus.PROCESSING)
                 .exchange()
@@ -153,6 +177,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     void updateOrderStatus_WhenNotExists_ShouldReturn404() throws Exception {
         webTestClient.put()
                 .uri("/api/order/99999")
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(OrderStatus.PROCESSING)
                 .exchange()
@@ -161,16 +186,15 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void updateOrderStatus_ToCancelled_ShouldReturn400() throws Exception {
-        // First create an order
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(1L);
         item.setQuantity(1);
-
         OrderCreateRequest createRequest = new OrderCreateRequest();
         createRequest.setItems(List.of(item));
 
         String response = webTestClient.post()
                 .uri("/api/order")
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -181,9 +205,9 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         Long orderId = objectMapper.readTree(response).get("id").asLong();
 
-        // Then try to cancel it (should fail)
         webTestClient.put()
                 .uri("/api/order/" + orderId)
+                .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(OrderStatus.CANCELLED)
                 .exchange()
@@ -191,18 +215,100 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void getAllOrders_ShouldReturnPaginatedOrders() throws Exception {
+    void getAllOrders_WithAuth_ShouldReturnPaginatedOrders() throws Exception {
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/order")
                         .queryParam("page", "0")
                         .queryParam("size", "10")
                         .build())
+                .header("Authorization", "Bearer " + supervisorToken)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.content").isArray()
                 .jsonPath("$.totalElements").exists();
+    }
+
+    @Test
+    void getMyOrders_ReturnsOnlyOrdersForCurrentUser() throws Exception {
+        String tokenUser1 = JwtTestHelper.token(JWT_SECRET, 100L, "user100", "USER");
+        String tokenUser2 = JwtTestHelper.token(JWT_SECRET, 200L, "user200", "USER");
+
+        OrderItemRequest item = new OrderItemRequest();
+        item.setProductId(1L);
+        item.setQuantity(1);
+        OrderCreateRequest createRequest = new OrderCreateRequest();
+        createRequest.setItems(List.of(item));
+
+        webTestClient.post()
+                .uri("/api/order")
+                .header("Authorization", "Bearer " + tokenUser1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(createRequest)
+                .exchange()
+                .expectStatus().isCreated();
+
+        webTestClient.post()
+                .uri("/api/order")
+                .header("Authorization", "Bearer " + tokenUser2)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(createRequest)
+                .exchange()
+                .expectStatus().isCreated();
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/order/my").queryParam("page", "0").queryParam("size", "10").build())
+                .header("Authorization", "Bearer " + tokenUser1)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content").isArray()
+                .jsonPath("$.totalElements").isEqualTo(1);
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/order/my").queryParam("page", "0").queryParam("size", "10").build())
+                .header("Authorization", "Bearer " + tokenUser2)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content").isArray()
+                .jsonPath("$.totalElements").isEqualTo(1);
+    }
+
+    @Test
+    void getMyOrders_WithoutAuth_ShouldReturn401() throws Exception {
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/order/my").queryParam("page", "0").queryParam("size", "10").build())
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    void getUserOrders_AsSupervisor_ReturnsOrdersForThatUser() throws Exception {
+        String tokenUser = JwtTestHelper.token(JWT_SECRET, 50L, "user50", "USER");
+        OrderItemRequest item = new OrderItemRequest();
+        item.setProductId(1L);
+        item.setQuantity(1);
+        OrderCreateRequest createRequest = new OrderCreateRequest();
+        createRequest.setItems(List.of(item));
+
+        webTestClient.post()
+                .uri("/api/order")
+                .header("Authorization", "Bearer " + tokenUser)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(createRequest)
+                .exchange()
+                .expectStatus().isCreated();
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/api/order/user/50").queryParam("page", "0").queryParam("size", "10").build())
+                .header("Authorization", "Bearer " + supervisorToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.content").isArray()
+                .jsonPath("$.totalElements").isEqualTo(1);
     }
 }
 

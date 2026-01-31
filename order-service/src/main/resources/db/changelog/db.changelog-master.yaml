@@ -3,4 +3,6 @@ databaseChangeLog:
       file: db/changelog/sql/db.changelog-1.0.0_initialize_tables.sql
   - include:
       file: db/changelog/sql/db.changelog-1.0.1_insert_base_data.sql
+  - include:
+      file: db/changelog/sql/db.changelog-1.0.2_add_user_id.sql
 

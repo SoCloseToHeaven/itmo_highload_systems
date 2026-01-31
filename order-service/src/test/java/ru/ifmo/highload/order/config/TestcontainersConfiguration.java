@@ -45,6 +45,8 @@ public abstract class TestcontainersConfiguration {
         postgres.start();
     }
 
+    protected static final String JWT_SECRET = "test-jwt-secret-key-min-32-characters";
+
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
@@ -52,13 +54,10 @@ public abstract class TestcontainersConfiguration {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.liquibase.enabled", () -> "true");
-        
-        // Disable Spring Cloud Config
+        registry.add("jwt.secret", () -> JWT_SECRET);
         registry.add("spring.cloud.config.enabled", () -> "false");
         registry.add("spring.cloud.bootstrap.enabled", () -> "false");
         registry.add("spring.cloud.config.uri", () -> "");
-        
-        // Disable Eureka
         registry.add("eureka.client.enabled", () -> "false");
         registry.add("eureka.client.register-with-eureka", () -> "false");
         registry.add("eureka.client.fetch-registry", () -> "false");

@@ -30,18 +30,19 @@ public class OrderServiceImpl implements OrderService {
     private final PriceServiceClient priceServiceClient;
 
     @Override
-    public Mono<OrderResponse> createOrder(OrderCreateRequest request) {
-        return Mono.fromCallable(() -> createOrderBlocking(request))
+    public Mono<OrderResponse> createOrder(OrderCreateRequest request, Long userId) {
+        return Mono.fromCallable(() -> createOrderBlocking(request, userId))
                 .flatMap(Mono::just);
     }
 
     @Transactional
-    private OrderResponse createOrderBlocking(OrderCreateRequest request) {
+    private OrderResponse createOrderBlocking(OrderCreateRequest request, Long userId) {
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new BadRequestException("В заказе должен быть хотя бы один продукт");
         }
 
         Order order = new Order();
+        order.setUserId(userId);
         order.setStatus(OrderStatus.PENDING);
         order.setTotalSum(0);
 
@@ -114,26 +115,18 @@ public class OrderServiceImpl implements OrderService {
         return toOrderResponse(updated);
     }
 
-    /**
-     * Get paginated list of orders for a specific user.
-     * Currently returns all orders (user filtering will be implemented in future)
-     */
     @Override
     public Mono<Page<OrderResponse>> getUserOrders(Long userId, Pageable pageable) {
         return Mono.fromCallable(() -> {
-            Page<Order> orders = orderRepository.findAll(pageable);
+            Page<Order> orders = orderRepository.findByUserId(userId, pageable);
             return orders.map(this::toOrderResponse);
         });
     }
 
-    /**
-     * Get paginated list of orders for the current user.
-     * Currently returns all orders (user filtering will be implemented in future)
-     */
     @Override
-    public Mono<Page<OrderResponse>> getMyOrders(Pageable pageable) {
+    public Mono<Page<OrderResponse>> getMyOrders(Long userId, Pageable pageable) {
         return Mono.fromCallable(() -> {
-            Page<Order> orders = orderRepository.findAll(pageable);
+            Page<Order> orders = orderRepository.findByUserId(userId, pageable);
             return orders.map(this::toOrderResponse);
         });
     }

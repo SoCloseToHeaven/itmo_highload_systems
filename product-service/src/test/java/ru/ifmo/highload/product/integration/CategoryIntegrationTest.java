@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.ifmo.highload.product.config.TestcontainersConfiguration;
 import ru.ifmo.highload.product.dto.category.CategoryCreateRequest;
 import ru.ifmo.highload.product.dto.category.CategoryUpdateRequest;
+import ru.ifmo.highload.product.util.JwtTestHelper;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -33,13 +34,18 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
     }
 
 
+    private String logisticianToken() {
+        return JwtTestHelper.token(JWT_SECRET, 1L, "logistician", "LOGISTICIAN");
+    }
+
     @Test
-    void createCategory_ShouldReturn201() throws Exception {
+    void createCategory_AsLogistician_ShouldReturn201() throws Exception {
         CategoryCreateRequest request = new CategoryCreateRequest();
         request.setName("New Category");
         request.setParentCategoryId(null);
 
         mockMvc.perform(post("/api/category")
+                        .header("Authorization", "Bearer " + logisticianToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -52,15 +58,16 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         CategoryCreateRequest request = new CategoryCreateRequest();
         request.setName("Existing Category");
         request.setParentCategoryId(null);
+        String token = logisticianToken();
 
-        // First creation should succeed
         mockMvc.perform(post("/api/category")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
-        // Second creation with same name should fail
         mockMvc.perform(post("/api/category")
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -73,6 +80,7 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         request.setParentCategoryId(null);
 
         mockMvc.perform(put("/api/category/1")
+                        .header("Authorization", "Bearer " + logisticianToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -86,6 +94,7 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         request.setParentCategoryId(null);
 
         mockMvc.perform(put("/api/category/99999")
+                        .header("Authorization", "Bearer " + logisticianToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -93,12 +102,12 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void deleteCategory_ShouldReturn204() throws Exception {
-        // First create a category
         CategoryCreateRequest createRequest = new CategoryCreateRequest();
         createRequest.setName("Category to Delete");
         createRequest.setParentCategoryId(null);
 
         String response = mockMvc.perform(post("/api/category")
+                        .header("Authorization", "Bearer " + logisticianToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
@@ -108,14 +117,15 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
 
         Long categoryId = objectMapper.readTree(response).get("id").asLong();
 
-        // Then delete it
-        mockMvc.perform(delete("/api/category/" + categoryId))
+        mockMvc.perform(delete("/api/category/" + categoryId)
+                        .header("Authorization", "Bearer " + logisticianToken()))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void deleteCategory_WhenNotExists_ShouldReturn404() throws Exception {
-        mockMvc.perform(delete("/api/category/99999"))
+        mockMvc.perform(delete("/api/category/99999")
+                        .header("Authorization", "Bearer " + logisticianToken()))
                 .andExpect(status().isNotFound());
     }
 }

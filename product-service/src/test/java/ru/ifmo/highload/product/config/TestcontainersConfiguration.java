@@ -21,6 +21,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public abstract class TestcontainersConfiguration {
 
+    protected static final String JWT_SECRET = "test-jwt-secret-key-min-32-characters";
+
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("testdb")
@@ -48,6 +50,7 @@ public abstract class TestcontainersConfiguration {
         registry.add("eureka.client.enabled", () -> "false");
         registry.add("eureka.client.register-with-eureka", () -> "false");
         registry.add("eureka.client.fetch-registry", () -> "false");
+        registry.add("jwt.secret", () -> JWT_SECRET);
     }
 }
 

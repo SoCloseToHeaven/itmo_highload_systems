@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.ifmo.highload.discount.config.TestcontainersConfiguration;
 import ru.ifmo.highload.discount.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.discount.dto.discount.DiscountUpdateRequest;
+import ru.ifmo.highload.discount.util.JwtTestHelper;
 
 import java.time.ZonedDateTime;
 
@@ -25,13 +26,16 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private String supervisorToken;
+
     @BeforeEach
     void setUp() {
         setupMockClients();
+        supervisorToken = JwtTestHelper.token(JWT_SECRET, 1L, "supervisor", "SUPERVISOR");
     }
 
     @Test
-    void createDiscount_ShouldReturn201() throws Exception {
+    void createDiscount_AsSupervisor_ShouldReturn201() throws Exception {
         DiscountCreateRequest request = new DiscountCreateRequest();
         request.setProductId(1L);
         request.setActualPriceId(1L);
@@ -39,6 +43,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         mockMvc.perform(post("/api/discount")
+                        .header("Authorization", "Bearer " + supervisorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -55,6 +60,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setEndDate(ZonedDateTime.now().plusDays(1));
 
         mockMvc.perform(post("/api/discount")
+                        .header("Authorization", "Bearer " + supervisorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -71,8 +77,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void getActiveDiscounts_ShouldReturnActiveDiscounts() throws Exception {
-        // First create an active discount
+    void getActiveDiscounts_ShouldReturnActiveDiscounts_WithoutAuth() throws Exception {
         DiscountCreateRequest request = new DiscountCreateRequest();
         request.setProductId(1L);
         request.setActualPriceId(1L);
@@ -80,11 +85,11 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         mockMvc.perform(post("/api/discount")
+                        .header("Authorization", "Bearer " + supervisorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
-        // Then get active discounts
         mockMvc.perform(get("/api/discount/active"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
@@ -92,7 +97,6 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void updateDiscount_ShouldUpdateDiscount() throws Exception {
-        // First create a discount
         DiscountCreateRequest createRequest = new DiscountCreateRequest();
         createRequest.setProductId(1L);
         createRequest.setActualPriceId(1L);
@@ -100,6 +104,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         createRequest.setEndDate(ZonedDateTime.now().plusDays(10));
 
         String response = mockMvc.perform(post("/api/discount")
+                        .header("Authorization", "Bearer " + supervisorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
@@ -109,13 +114,13 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
 
         Long discountId = objectMapper.readTree(response).get("id").asLong();
 
-        // Then update it
         DiscountUpdateRequest updateRequest = new DiscountUpdateRequest();
         updateRequest.setStartDate(ZonedDateTime.now().plusDays(2));
         updateRequest.setEndDate(ZonedDateTime.now().plusDays(12));
         updateRequest.setActualPriceId(1L);
 
         mockMvc.perform(put("/api/discount/" + discountId)
+                        .header("Authorization", "Bearer " + supervisorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -130,6 +135,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setActualPriceId(1L);
 
         mockMvc.perform(put("/api/discount/99999")
+                        .header("Authorization", "Bearer " + supervisorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -137,7 +143,6 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void deleteDiscount_ShouldReturn204() throws Exception {
-        // First create a discount
         DiscountCreateRequest request = new DiscountCreateRequest();
         request.setProductId(1L);
         request.setActualPriceId(1L);
@@ -145,6 +150,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         String response = mockMvc.perform(post("/api/discount")
+                        .header("Authorization", "Bearer " + supervisorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -154,14 +160,15 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
 
         Long discountId = objectMapper.readTree(response).get("id").asLong();
 
-        // Then delete it
-        mockMvc.perform(delete("/api/discount/" + discountId))
+        mockMvc.perform(delete("/api/discount/" + discountId)
+                        .header("Authorization", "Bearer " + supervisorToken))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void deleteDiscount_WhenNotExists_ShouldReturn404() throws Exception {
-        mockMvc.perform(delete("/api/discount/99999"))
+        mockMvc.perform(delete("/api/discount/99999")
+                        .header("Authorization", "Bearer " + supervisorToken))
                 .andExpect(status().isNotFound());
     }
 }

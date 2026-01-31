@@ -5,12 +5,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import ru.ifmo.highload.order.api.OrderService;
 import ru.ifmo.highload.order.dto.order.OrderCreateRequest;
 import ru.ifmo.highload.order.dto.order.OrderResponse;
 import ru.ifmo.highload.order.dto.order.OrderStatus;
+import ru.ifmo.highload.order.security.CurrentUser;
 
 @RestController
 @RequestMapping("/api/order")
@@ -20,9 +23,13 @@ public class OrderController implements OrderApi {
     private final OrderService orderService;
 
     @Override
-    public Mono<ResponseEntity<OrderResponse>> createOrder(OrderCreateRequest request) {
-        return orderService.createOrder(request)
-                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response));
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('USER','SUPERVISOR')")
+    public Mono<ResponseEntity<OrderResponse>> createOrder(@org.springframework.web.bind.annotation.RequestBody @jakarta.validation.Valid OrderCreateRequest request) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(auth -> (CurrentUser) auth.getPrincipal())
+                .flatMap(user -> orderService.createOrder(request, user.getUserId())
+                        .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response)));
     }
 
     @Override
@@ -45,8 +52,11 @@ public class OrderController implements OrderApi {
 
     @Override
     public Mono<ResponseEntity<Page<OrderResponse>>> getMyOrders(Pageable pageable) {
-        return orderService.getMyOrders(pageable)
-                .map(ResponseEntity::ok);
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(auth -> (CurrentUser) auth.getPrincipal())
+                .flatMap(user -> orderService.getMyOrders(user.getUserId(), pageable)
+                        .map(ResponseEntity::ok));
     }
 
     @Override
