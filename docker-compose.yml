@@ -1,0 +1,193 @@
+version: '3.8'
+
+services:
+  # Eureka Server
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-net
+    volumes:
+      - gradle-cache:/root/.gradle
+
+  # Config Server
+  config-server:
+    build: ./config-server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka-server
+    networks:
+      - microservices-net
+    environment:
+      - SPRING_PROFILES_ACTIVE=native
+    volumes:
+      - gradle-cache:/root/.gradle
+
+  # PostgreSQL databases
+  postgres-product:
+    image: postgres:15.5
+    container_name: postgres-product
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-product-data:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+
+  postgres-price:
+    image: postgres:15.5
+    container_name: postgres-price
+    environment:
+      POSTGRES_DB: price_db
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-price-data:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+
+  postgres-discount:
+    image: postgres:15.5
+    container_name: postgres-discount
+    environment:
+      POSTGRES_DB: discount_db
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-discount-data:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+
+  postgres-order:
+    image: postgres:15.5
+    container_name: postgres-order
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-order-data:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+
+  # Microservices
+  product-service:
+    build: ./product-service
+    container_name: product-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - eureka-server
+      - config-server
+      - postgres-product
+    networks:
+      - microservices-net
+    environment:
+      - DB_USERNAME=${DB_USERNAME:-admin}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
+
+  price-service:
+    build: ./price-service
+    container_name: price-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - eureka-server
+      - config-server
+      - postgres-price
+    networks:
+      - microservices-net
+    environment:
+      - DB_USERNAME=${DB_USERNAME:-admin}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
+
+  discount-service:
+    build: ./discount-service
+    container_name: discount-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - eureka-server
+      - config-server
+      - postgres-discount
+      - product-service
+      - price-service
+    networks:
+      - microservices-net
+    environment:
+      - DB_USERNAME=${DB_USERNAME:-admin}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - eureka-server
+      - config-server
+      - postgres-order
+      - product-service
+      - price-service
+    networks:
+      - microservices-net
+    environment:
+      - DB_USERNAME=${DB_USERNAME:-admin}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+      - config-server
+      - product-service
+      - price-service
+      - discount-service
+      - order-service
+    networks:
+      - microservices-net
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  postgres-product-data:
+  postgres-price-data:
+  postgres-discount-data:
+  postgres-order-data:
+  gradle-cache:  # Общий кэш для Gradle зависимостей всех сервисов

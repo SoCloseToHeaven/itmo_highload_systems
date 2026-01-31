@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/product/**,/api/category/**
+          filters:
+            - StripPrefix=0
+        - id: price-service
+          uri: lb://price-service
+          predicates:
+            - Path=/api/price/**
+          filters:
+            - StripPrefix=0
+        - id: discount-service
+          uri: lb://discount-service
+          predicates:
+            - Path=/api/discount/**
+          filters:
+            - StripPrefix=0
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - StripPrefix=0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
