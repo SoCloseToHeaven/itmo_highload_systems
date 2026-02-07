@@ -25,7 +25,7 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.GET, "/api/price/product/*/current").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/price").permitAll()
                         .pathMatchers("/api/price/**").authenticated()
-                        .pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/webjars/swagger-ui/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
