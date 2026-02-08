@@ -5,12 +5,18 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/product/**,/api/category/**
           filters:
-            - StripPrefix=0
+        ы    - StripPrefix=0
         - id: price-service
           uri: lb://price-service
           predicates:
