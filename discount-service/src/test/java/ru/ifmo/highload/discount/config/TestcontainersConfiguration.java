@@ -29,7 +29,8 @@ import static org.mockito.Mockito.when;
 @Testcontainers
 public abstract class TestcontainersConfiguration {
 
-    protected static final String JWT_SECRET = "test-jwt-secret-key-min-32-characters";
+    protected static final String TEST_USER_ID_HEADER = "1";
+    protected static final String TEST_SUPERVISOR_ROLES_HEADER = "SUPERVISOR";
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
@@ -64,7 +65,6 @@ public abstract class TestcontainersConfiguration {
         registry.add("eureka.client.enabled", () -> "false");
         registry.add("eureka.client.register-with-eureka", () -> "false");
         registry.add("eureka.client.fetch-registry", () -> "false");
-        registry.add("jwt.secret", () -> JWT_SECRET);
     }
 
     protected void setupMockClients() {

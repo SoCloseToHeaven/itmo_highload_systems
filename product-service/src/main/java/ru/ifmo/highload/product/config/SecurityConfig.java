@@ -1,7 +1,6 @@
 package ru.ifmo.highload.product.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,7 +10,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import ru.ifmo.highload.product.security.JwtAuthenticationFilter;
+import ru.ifmo.highload.product.security.XUserIdAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -19,14 +18,9 @@ import ru.ifmo.highload.product.security.JwtAuthenticationFilter;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final ru.ifmo.highload.product.security.JwtUtil jwtUtil;
+    private final XUserIdAuthenticationFilter xUserIdAuthenticationFilter;
 
-    @Bean
-    public ru.ifmo.highload.product.security.JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new ru.ifmo.highload.product.security.JwtAuthenticationFilter(jwtUtil);
-    }
-
-    @Bean
+    @org.springframework.context.annotation.Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -37,7 +31,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(xUserIdAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

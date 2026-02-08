@@ -5,16 +5,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.ifmo.highload.product.config.TestcontainersConfiguration;
 import ru.ifmo.highload.product.dto.category.CategoryCreateRequest;
 import ru.ifmo.highload.product.dto.category.CategoryUpdateRequest;
-import ru.ifmo.highload.product.util.JwtTestHelper;
+import ru.ifmo.highload.product.security.XUserIdAuthenticationFilter;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class CategoryIntegrationTest extends TestcontainersConfiguration {
 
     @Autowired
@@ -34,10 +36,6 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
     }
 
 
-    private String logisticianToken() {
-        return JwtTestHelper.token(JWT_SECRET, 1L, "logistician", "LOGISTICIAN");
-    }
-
     @Test
     void createCategory_AsLogistician_ShouldReturn201() throws Exception {
         CategoryCreateRequest request = new CategoryCreateRequest();
@@ -45,7 +43,8 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         request.setParentCategoryId(null);
 
         mockMvc.perform(post("/api/category")
-                        .header("Authorization", "Bearer " + logisticianToken())
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -58,16 +57,17 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         CategoryCreateRequest request = new CategoryCreateRequest();
         request.setName("Existing Category");
         request.setParentCategoryId(null);
-        String token = logisticianToken();
 
         mockMvc.perform(post("/api/category")
-                        .header("Authorization", "Bearer " + token)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/category")
-                        .header("Authorization", "Bearer " + token)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -80,7 +80,7 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         request.setParentCategoryId(null);
 
         mockMvc.perform(put("/api/category/1")
-                        .header("Authorization", "Bearer " + logisticianToken())
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -94,7 +94,7 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         request.setParentCategoryId(null);
 
         mockMvc.perform(put("/api/category/99999")
-                        .header("Authorization", "Bearer " + logisticianToken())
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -107,7 +107,7 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         createRequest.setParentCategoryId(null);
 
         String response = mockMvc.perform(post("/api/category")
-                        .header("Authorization", "Bearer " + logisticianToken())
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
@@ -118,14 +118,14 @@ class CategoryIntegrationTest extends TestcontainersConfiguration {
         Long categoryId = objectMapper.readTree(response).get("id").asLong();
 
         mockMvc.perform(delete("/api/category/" + categoryId)
-                        .header("Authorization", "Bearer " + logisticianToken()))
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void deleteCategory_WhenNotExists_ShouldReturn404() throws Exception {
         mockMvc.perform(delete("/api/category/99999")
-                        .header("Authorization", "Bearer " + logisticianToken()))
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER))
                 .andExpect(status().isNotFound());
     }
 }

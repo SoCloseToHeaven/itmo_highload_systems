@@ -15,6 +15,7 @@ import ru.ifmo.highload.auth.dto.UserCreateRequest;
 import ru.ifmo.highload.auth.impl.user.Role;
 import ru.ifmo.highload.auth.impl.user.User;
 import ru.ifmo.highload.auth.impl.user.UserRepository;
+import ru.ifmo.highload.auth.security.XUserIdAuthenticationFilter;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -35,6 +36,7 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
     private PasswordEncoder passwordEncoder;
 
     private static final String SUPERVISOR_PASSWORD = "password";
+    private Long supervisorId;
 
     @BeforeEach
     void ensureSupervisorWithKnownPassword() {
@@ -51,6 +53,7 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
                     userRepository.save(u);
                 }
         );
+        supervisorId = userRepository.findByUsername("supervisor").orElseThrow().getId();
     }
 
     @Test
@@ -93,15 +96,13 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void createUser_AsSupervisor_ShouldReturn201() throws Exception {
-        String supervisorToken = loginAndGetToken("supervisor", SUPERVISOR_PASSWORD);
-
         UserCreateRequest request = new UserCreateRequest();
         request.setUsername("newuser");
         request.setPassword("pass1234");
         request.setRole(Role.USER);
 
         mockMvc.perform(post("/api/auth/users")
-                        .header("Authorization", "Bearer " + supervisorToken)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(supervisorId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -126,10 +127,8 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void getMe_WithValidToken_ShouldReturnUserWithoutPassword() throws Exception {
-        String token = loginAndGetToken("supervisor", SUPERVISOR_PASSWORD);
-
         mockMvc.perform(get("/api/auth/me")
-                        .header("Authorization", "Bearer " + token))
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(supervisorId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("supervisor"))
                 .andExpect(jsonPath("$.role").value("SUPERVISOR"))
@@ -144,10 +143,8 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void getAllUsers_AsSupervisor_ShouldReturnList() throws Exception {
-        String token = loginAndGetToken("supervisor", SUPERVISOR_PASSWORD);
-
         mockMvc.perform(get("/api/auth/users")
-                        .header("Authorization", "Bearer " + token))
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(supervisorId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].username").value("supervisor"))
@@ -156,15 +153,13 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void createUser_DuplicateUsername_ShouldReturn400() throws Exception {
-        String token = loginAndGetToken("supervisor", SUPERVISOR_PASSWORD);
-
         UserCreateRequest request = new UserCreateRequest();
         request.setUsername("supervisor");
         request.setPassword("other");
         request.setRole(Role.USER);
 
         mockMvc.perform(post("/api/auth/users")
-                        .header("Authorization", "Bearer " + token)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(supervisorId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -172,15 +167,13 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void getUserById_AsSupervisor_ShouldReturnUser() throws Exception {
-        String token = loginAndGetToken("supervisor", SUPERVISOR_PASSWORD);
-
         UserCreateRequest createRequest = new UserCreateRequest();
         createRequest.setUsername("userforid");
         createRequest.setPassword("pass1234");
         createRequest.setRole(Role.CASHIER);
 
         String createResponse = mockMvc.perform(post("/api/auth/users")
-                        .header("Authorization", "Bearer " + token)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(supervisorId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
@@ -191,7 +184,7 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
         Long userId = objectMapper.readTree(createResponse).get("id").asLong();
 
         mockMvc.perform(get("/api/auth/users/" + userId)
-                        .header("Authorization", "Bearer " + token))
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(supervisorId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(userId))
                 .andExpect(jsonPath("$.username").value("userforid"))
@@ -201,10 +194,8 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void getUserById_WhenNotExists_ShouldReturn404() throws Exception {
-        String token = loginAndGetToken("supervisor", SUPERVISOR_PASSWORD);
-
         mockMvc.perform(get("/api/auth/users/99999")
-                        .header("Authorization", "Bearer " + token))
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(supervisorId)))
                 .andExpect(status().isNotFound());
     }
 

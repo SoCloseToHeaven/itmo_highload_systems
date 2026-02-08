@@ -51,6 +51,9 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+jwt:
+  secret: ${JWT_SECRET:itmo-highload-auth-secret-key-min-32-chars}
+
 logging:
   level:
     com.netflix.discovery: WARN

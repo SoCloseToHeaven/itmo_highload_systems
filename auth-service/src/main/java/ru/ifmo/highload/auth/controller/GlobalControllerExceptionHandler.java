@@ -1,6 +1,7 @@
 package ru.ifmo.highload.auth.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -19,6 +20,7 @@ import ru.ifmo.highload.auth.impl.exceptions.ResourceNotFoundException;
 
 import java.time.ZonedDateTime;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalControllerExceptionHandler {
 
@@ -68,7 +70,7 @@ public class GlobalControllerExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseBody
     HttpErrorResponse handleMessageNotReadable(HttpServletRequest req, HttpMessageNotReadableException ex) {
-        return buildError(req.getRequestURI(), ex.getMessage() != null ? ex.getMessage() : "Некорректное тело запроса", HttpStatus.BAD_REQUEST);
+        return buildError(req.getRequestURI(), "Некорректное тело запроса", HttpStatus.BAD_REQUEST);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -83,12 +85,20 @@ public class GlobalControllerExceptionHandler {
         return buildError(req.getRequestURI(), error, HttpStatus.BAD_REQUEST);
     }
 
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({IllegalArgumentException.class, NullPointerException.class})
+    @ResponseBody
+    HttpErrorResponse handleIllegalOrNullPointer(HttpServletRequest req, RuntimeException ex) {
+        log.debug("Ошибка валидации запроса: {}", ex.getMessage());
+        return buildError(req.getRequestURI(), "Некорректный запрос. Проверьте передаваемые параметры.", HttpStatus.BAD_REQUEST);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(Exception.class)
     @ResponseBody
     HttpErrorResponse handleGeneric(HttpServletRequest req, Exception ex) {
-        ex.printStackTrace();
-        return buildError(req.getRequestURI(), "Внутренняя ошибка сервера", HttpStatus.INTERNAL_SERVER_ERROR);
+        log.error("Необработанное исключение при запросе {}: ", req.getRequestURI(), ex);
+        return buildError(req.getRequestURI(), "Некорректный запрос. Запрос не может быть обработан.", HttpStatus.BAD_REQUEST);
     }
 
     private static HttpErrorResponse buildError(String path, String error, HttpStatus status) {

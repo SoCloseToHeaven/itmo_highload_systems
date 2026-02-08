@@ -1,6 +1,7 @@
 package ru.ifmo.highload.order.controller;
 
 import jakarta.validation.ConstraintViolation;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -21,6 +22,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalControllerExceptionHandler {
 
@@ -90,12 +92,22 @@ public class GlobalControllerExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public Mono<ResponseEntity<HttpErrorResponse>> handleIllegalStateException(IllegalStateException ex, org.springframework.web.server.ServerWebExchange exchange) {
         HttpErrorResponse response = new HttpErrorResponse();
-        // Ошибки валидации параметров должны возвращать 400
         if (ex.getMessage() != null && ex.getMessage().contains("Pageable")) {
             response.setError("Некорректные параметры пагинации. Используйте параметры page и size.");
         } else {
-            response.setError("Некорректный запрос: " + ex.getMessage());
+            response.setError("Некорректный запрос. Проверьте передаваемые параметры.");
         }
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setPath(exchange.getRequest().getURI().getPath());
+        response.setTimestamp(ZonedDateTime.now());
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, NullPointerException.class})
+    public Mono<ResponseEntity<HttpErrorResponse>> handleIllegalOrNullPointerException(RuntimeException ex, org.springframework.web.server.ServerWebExchange exchange) {
+        log.debug("Ошибка валидации запроса: {}", ex.getMessage());
+        HttpErrorResponse response = new HttpErrorResponse();
+        response.setError("Некорректный запрос. Проверьте передаваемые параметры.");
         response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setPath(exchange.getRequest().getURI().getPath());
         response.setTimestamp(ZonedDateTime.now());
@@ -104,16 +116,13 @@ public class GlobalControllerExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<HttpErrorResponse>> handleGenericException(Exception ex, org.springframework.web.server.ServerWebExchange exchange) {
+        log.error("Необработанное исключение при запросе {}: ", exchange.getRequest().getURI().getPath(), ex);
         HttpErrorResponse response = new HttpErrorResponse();
-        response.setError("Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
-        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.setError("Некорректный запрос. Запрос не может быть обработан.");
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setPath(exchange.getRequest().getURI().getPath());
         response.setTimestamp(ZonedDateTime.now());
-        
-        // Логируем реальную ошибку для разработчиков
-        ex.printStackTrace();
-        
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
     }
 }
 

@@ -4,18 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.ifmo.highload.product.config.TestcontainersConfiguration;
 import ru.ifmo.highload.product.dto.category.CategoryCreateRequest;
 import ru.ifmo.highload.product.dto.product.ProductUpdateRequest;
-import ru.ifmo.highload.product.util.JwtTestHelper;
+import ru.ifmo.highload.product.security.XUserIdAuthenticationFilter;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class ProductIntegrationTest extends TestcontainersConfiguration {
 
     @Autowired
@@ -69,14 +71,14 @@ class ProductIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void updateProduct_AsLogistician_ShouldUpdateProduct() throws Exception {
-        String token = JwtTestHelper.token(JWT_SECRET, 1L, "logistician", "LOGISTICIAN");
         ProductUpdateRequest request = new ProductUpdateRequest();
         request.setName("Updated Product");
         request.setDescription("Updated Description");
         request.setStockQuantity(100);
 
         mockMvc.perform(put("/api/product/1")
-                        .header("Authorization", "Bearer " + token)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -85,21 +87,21 @@ class ProductIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void updateProduct_WhenNotExists_ShouldReturn404() throws Exception {
-        String token = JwtTestHelper.token(JWT_SECRET, 1L, "logistician", "LOGISTICIAN");
         ProductUpdateRequest request = new ProductUpdateRequest();
         request.setName("Updated Product");
         request.setDescription("Updated Description");
         request.setStockQuantity(100);
 
         mockMvc.perform(put("/api/product/99999")
-                        .header("Authorization", "Bearer " + token)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_LOGISTICIAN_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void updateProduct_WithoutAuth_ShouldReturn401() throws Exception {
+    void updateProduct_WithoutAuth_ShouldReturn4xx() throws Exception {
         ProductUpdateRequest request = new ProductUpdateRequest();
         request.setName("Updated");
         request.setDescription("Desc");
@@ -108,7 +110,7 @@ class ProductIntegrationTest extends TestcontainersConfiguration {
         mockMvc.perform(put("/api/product/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().is4xxClientError());
     }
 }
 

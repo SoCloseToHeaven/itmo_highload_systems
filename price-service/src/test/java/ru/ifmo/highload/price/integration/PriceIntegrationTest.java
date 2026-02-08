@@ -10,7 +10,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import ru.ifmo.highload.price.config.TestcontainersConfiguration;
 import ru.ifmo.highload.price.dto.actual_price.PriceCreateRequest;
 import ru.ifmo.highload.price.dto.actual_price.PriceUpdateRequest;
-import ru.ifmo.highload.price.util.JwtTestHelper;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -18,6 +17,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static ru.ifmo.highload.price.security.XUserIdWebFilter.HEADER_X_USER_ID;
+import static ru.ifmo.highload.price.security.XUserIdWebFilter.HEADER_X_USER_ROLES;
 
 @AutoConfigureWebTestClient
 class PriceIntegrationTest extends TestcontainersConfiguration {
@@ -31,12 +32,13 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
     @Autowired(required = false)
     private DataSource dataSource;
 
-    private String logisticianToken;
-
     @BeforeEach
     void setUp() {
         setupMockClients();
-        logisticianToken = JwtTestHelper.token(JWT_SECRET, 1L, "logistician", "LOGISTICIAN");
+    }
+
+    private WebTestClient.RequestHeadersSpec<?> withAuth(WebTestClient.RequestHeadersSpec<?> spec) {
+        return spec.header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER);
     }
 
     /** Проверка: Liquibase выполнился и в БД есть базовые данные (та же БД, что и для R2DBC). */
@@ -52,6 +54,19 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
         }
     }
 
+    /** Проверка: Liquibase создал таблицу истории и применил все changeset'ы (инициализация + базовые данные). */
+    @Test
+    void liquibaseShouldHaveRunAllChangesets() throws Exception {
+        assertThat(dataSource).isNotNull();
+        try (Connection c = dataSource.getConnection();
+             Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery("SELECT COUNT(*) FROM databasechangelog")) {
+            assertThat(rs.next()).isTrue();
+            long count = rs.getLong(1);
+            assertThat(count).as("Liquibase должен был выполнить оба changeset'а (1.0.0 + 1.0.1)").isGreaterThanOrEqualTo(2);
+        }
+    }
+
     @Test
     void createPrice_ShouldReturn201() {
         PriceCreateRequest request = new PriceCreateRequest();
@@ -60,7 +75,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/price")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -79,7 +94,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/price")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -94,7 +109,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/price")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -142,7 +157,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         String response = webTestClient.post()
                 .uri("/api/price")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -158,7 +173,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.put()
                 .uri("/api/price/" + priceId)
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(updateRequest)
                 .exchange()
@@ -175,7 +190,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.put()
                 .uri("/api/price/99999")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -190,7 +205,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/price")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -201,7 +216,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.put()
                 .uri("/api/price/product/400")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(updateRequest)
                 .exchange()
@@ -218,7 +233,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.put()
                 .uri("/api/price/product/99999")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -233,7 +248,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         String response = webTestClient.post()
                 .uri("/api/price")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -246,7 +261,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.delete()
                 .uri("/api/price/" + priceId)
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .exchange()
                 .expectStatus().isNoContent();
     }
@@ -255,7 +270,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
     void deletePrice_WhenNotExists_ShouldReturn404() {
         webTestClient.delete()
                 .uri("/api/price/99999")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -268,7 +283,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/price")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -276,7 +291,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.delete()
                 .uri("/api/price/product/600")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .exchange()
                 .expectStatus().isNoContent();
     }
@@ -285,7 +300,7 @@ class PriceIntegrationTest extends TestcontainersConfiguration {
     void deletePriceByProduct_WhenNotExists_StillReturns204() {
         webTestClient.delete()
                 .uri("/api/price/product/99999")
-                .header("Authorization", "Bearer " + logisticianToken)
+                .header(HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(HEADER_X_USER_ROLES, TEST_USER_ROLES_HEADER)
                 .exchange()
                 .expectStatus().isNoContent();
     }

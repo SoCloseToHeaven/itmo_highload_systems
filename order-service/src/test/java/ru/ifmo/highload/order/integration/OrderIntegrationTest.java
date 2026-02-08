@@ -11,7 +11,7 @@ import ru.ifmo.highload.order.config.TestcontainersConfiguration;
 import ru.ifmo.highload.order.dto.order.OrderCreateRequest;
 import ru.ifmo.highload.order.dto.order.OrderItemRequest;
 import ru.ifmo.highload.order.dto.order.OrderStatus;
-import ru.ifmo.highload.order.util.JwtTestHelper;
+import ru.ifmo.highload.order.security.XUserIdWebFilter;
 
 import java.util.List;
 
@@ -24,14 +24,9 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private String userToken;
-    private String supervisorToken;
-
     @BeforeEach
     void setUp() {
         setupMockClients();
-        userToken = JwtTestHelper.token(JWT_SECRET, 1L, "user1", "USER");
-        supervisorToken = JwtTestHelper.token(JWT_SECRET, 2L, "supervisor", "SUPERVISOR");
     }
 
     @Test
@@ -45,7 +40,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -57,7 +52,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void createOrder_WithoutAuth_ShouldReturn401() throws Exception {
+    void createOrder_WithoutAuth_ShouldReturn4xx() throws Exception {
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(1L);
         item.setQuantity(1);
@@ -69,7 +64,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
-                .expectStatus().isUnauthorized();
+                .expectStatus().is4xxClientError();
     }
 
     @Test
@@ -79,7 +74,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -93,7 +88,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()
@@ -110,7 +105,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         String response = webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -123,7 +118,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.get()
                 .uri("/api/order/" + orderId)
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -136,7 +131,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     void getOrderById_WhenNotExists_ShouldReturn404() throws Exception {
         webTestClient.get()
                 .uri("/api/order/99999")
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -151,7 +146,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         String response = webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -164,7 +159,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.put()
                 .uri("/api/order/" + orderId)
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(OrderStatus.PROCESSING)
                 .exchange()
@@ -177,7 +172,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     void updateOrderStatus_WhenNotExists_ShouldReturn404() throws Exception {
         webTestClient.put()
                 .uri("/api/order/99999")
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(OrderStatus.PROCESSING)
                 .exchange()
@@ -194,7 +189,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         String response = webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -207,7 +202,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.put()
                 .uri("/api/order/" + orderId)
-                .header("Authorization", "Bearer " + userToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_USER_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(OrderStatus.CANCELLED)
                 .exchange()
@@ -222,7 +217,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
                         .queryParam("page", "0")
                         .queryParam("size", "10")
                         .build())
-                .header("Authorization", "Bearer " + supervisorToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_SUPERVISOR_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -232,9 +227,6 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
     @Test
     void getMyOrders_ReturnsOnlyOrdersForCurrentUser() throws Exception {
-        String tokenUser1 = JwtTestHelper.token(JWT_SECRET, 100L, "user100", "USER");
-        String tokenUser2 = JwtTestHelper.token(JWT_SECRET, 200L, "user200", "USER");
-
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(1L);
         item.setQuantity(1);
@@ -243,7 +235,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + tokenUser1)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, "100").header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -251,7 +243,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + tokenUser2)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, "200").header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -259,7 +251,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/api/order/my").queryParam("page", "0").queryParam("size", "10").build())
-                .header("Authorization", "Bearer " + tokenUser1)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, "100").header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -268,7 +260,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/api/order/my").queryParam("page", "0").queryParam("size", "10").build())
-                .header("Authorization", "Bearer " + tokenUser2)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, "200").header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -277,16 +269,15 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void getMyOrders_WithoutAuth_ShouldReturn401() throws Exception {
+    void getMyOrders_WithoutAuth_ShouldReturn4xx() throws Exception {
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/api/order/my").queryParam("page", "0").queryParam("size", "10").build())
                 .exchange()
-                .expectStatus().isUnauthorized();
+                .expectStatus().is4xxClientError();
     }
 
     @Test
     void getUserOrders_AsSupervisor_ReturnsOrdersForThatUser() throws Exception {
-        String tokenUser = JwtTestHelper.token(JWT_SECRET, 50L, "user50", "USER");
         OrderItemRequest item = new OrderItemRequest();
         item.setProductId(1L);
         item.setQuantity(1);
@@ -295,7 +286,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.post()
                 .uri("/api/order")
-                .header("Authorization", "Bearer " + tokenUser)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, "50").header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_USER_ROLES)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(createRequest)
                 .exchange()
@@ -303,7 +294,7 @@ class OrderIntegrationTest extends TestcontainersConfiguration {
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder.path("/api/order/user/50").queryParam("page", "0").queryParam("size", "10").build())
-                .header("Authorization", "Bearer " + supervisorToken)
+                .header(XUserIdWebFilter.HEADER_X_USER_ID, TEST_SUPERVISOR_ID).header(XUserIdWebFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()

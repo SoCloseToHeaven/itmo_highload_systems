@@ -10,7 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.ifmo.highload.discount.config.TestcontainersConfiguration;
 import ru.ifmo.highload.discount.dto.discount.DiscountCreateRequest;
 import ru.ifmo.highload.discount.dto.discount.DiscountUpdateRequest;
-import ru.ifmo.highload.discount.util.JwtTestHelper;
+import ru.ifmo.highload.discount.security.XUserIdAuthenticationFilter;
 
 import java.time.ZonedDateTime;
 
@@ -26,12 +26,9 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private String supervisorToken;
-
     @BeforeEach
     void setUp() {
         setupMockClients();
-        supervisorToken = JwtTestHelper.token(JWT_SECRET, 1L, "supervisor", "SUPERVISOR");
     }
 
     @Test
@@ -43,7 +40,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         mockMvc.perform(post("/api/discount")
-                        .header("Authorization", "Bearer " + supervisorToken)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -60,7 +57,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setEndDate(ZonedDateTime.now().plusDays(1));
 
         mockMvc.perform(post("/api/discount")
-                        .header("Authorization", "Bearer " + supervisorToken)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -85,7 +82,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         mockMvc.perform(post("/api/discount")
-                        .header("Authorization", "Bearer " + supervisorToken)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -104,7 +101,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         createRequest.setEndDate(ZonedDateTime.now().plusDays(10));
 
         String response = mockMvc.perform(post("/api/discount")
-                        .header("Authorization", "Bearer " + supervisorToken)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createRequest)))
                 .andExpect(status().isCreated())
@@ -120,7 +117,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         updateRequest.setActualPriceId(1L);
 
         mockMvc.perform(put("/api/discount/" + discountId)
-                        .header("Authorization", "Bearer " + supervisorToken)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -135,7 +132,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setActualPriceId(1L);
 
         mockMvc.perform(put("/api/discount/99999")
-                        .header("Authorization", "Bearer " + supervisorToken)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -150,7 +147,7 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         request.setEndDate(ZonedDateTime.now().plusDays(10));
 
         String response = mockMvc.perform(post("/api/discount")
-                        .header("Authorization", "Bearer " + supervisorToken)
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -161,14 +158,14 @@ class DiscountIntegrationTest extends TestcontainersConfiguration {
         Long discountId = objectMapper.readTree(response).get("id").asLong();
 
         mockMvc.perform(delete("/api/discount/" + discountId)
-                        .header("Authorization", "Bearer " + supervisorToken))
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void deleteDiscount_WhenNotExists_ShouldReturn404() throws Exception {
         mockMvc.perform(delete("/api/discount/99999")
-                        .header("Authorization", "Bearer " + supervisorToken))
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, TEST_USER_ID_HEADER).header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, TEST_SUPERVISOR_ROLES_HEADER))
                 .andExpect(status().isNotFound());
     }
 }
