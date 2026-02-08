@@ -16,14 +16,12 @@ import ru.ifmo.highload.price.dto.actual_price.PriceResponse;
 import ru.ifmo.highload.price.dto.actual_price.PriceUpdateRequest;
 
 /**
- * Price management API for administrators
+ * Price management API (administrators).
  */
 @Tag(name = "Price Management", description = "API for managing product prices (for administrators)")
 public interface PriceApi {
 
-    /**
-     * Create a new price for a product
-     */
+    /** Creates a new price for a product. */
     @Operation(summary = "Create price", description = "Create a new price for a product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Price successfully created"),
@@ -32,11 +30,9 @@ public interface PriceApi {
     })
     @PostMapping
     Mono<ResponseEntity<PriceResponse>> createPrice(
-            @Parameter(description = "Price creation data") @Valid @RequestBody PriceCreateRequest request);
+            @Parameter(description = "Price creation data")             @Valid @RequestBody PriceCreateRequest request);
 
-    /**
-     * Update existing price by its ID
-     */
+    /** Updates price by ID. */
     @Operation(summary = "Update price by ID", description = "Update existing price by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Price successfully updated"),
@@ -45,11 +41,9 @@ public interface PriceApi {
     @PutMapping("/{priceId}")
     Mono<ResponseEntity<PriceResponse>> updatePrice(
             @Parameter(description = "Price ID to update") @PathVariable Long priceId,
-            @Parameter(description = "Updated price data") @Valid @RequestBody PriceUpdateRequest request);
+            @Parameter(description = "Updated price data")             @Valid @RequestBody PriceUpdateRequest request);
 
-    /**
-     * Delete price by its ID
-     */
+    /** Deletes price by ID. */
     @Operation(summary = "Delete price by ID", description = "Delete price by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Price successfully deleted"),
@@ -57,11 +51,9 @@ public interface PriceApi {
     })
     @DeleteMapping("/{priceId}")
     Mono<ResponseEntity<Void>> deletePrice(
-            @Parameter(description = "Price ID to delete") @PathVariable Long priceId);
+            @Parameter(description = "Price ID to delete")             @PathVariable Long priceId);
 
-    /**
-     * Update price for a specific product
-     */
+    /** Updates price for a product. */
     @Operation(summary = "Update price by product ID", description = "Update price for a specific product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Price successfully updated"),
@@ -70,11 +62,9 @@ public interface PriceApi {
     @PutMapping("/product/{productId}")
     Mono<ResponseEntity<PriceResponse>> updatePriceByProduct(
             @Parameter(description = "Product ID") @PathVariable Long productId,
-            @Parameter(description = "Updated price data") @Valid @RequestBody PriceUpdateRequest request);
+            @Parameter(description = "Updated price data")             @Valid @RequestBody PriceUpdateRequest request);
 
-    /**
-     * Delete price for a specific product
-     */
+    /** Deletes price for a product. */
     @Operation(summary = "Delete price by product ID", description = "Delete price for a specific product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Price successfully deleted"),
@@ -82,11 +72,9 @@ public interface PriceApi {
     })
     @DeleteMapping("/product/{productId}")
     Mono<ResponseEntity<Void>> deletePriceByProduct(
-            @Parameter(description = "Product ID") @PathVariable Long productId);
+            @Parameter(description = "Product ID")             @PathVariable Long productId);
 
-    /**
-     * Get current price for a specific product
-     */
+    /** Returns current price for a product. */
     @Operation(summary = "Get current price by product ID", description = "Get current price for a specific product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Price successfully retrieved"),
@@ -94,11 +82,9 @@ public interface PriceApi {
     })
     @GetMapping("/product/{productId}/current")
     Mono<ResponseEntity<Integer>> getCurrentPriceForProduct(
-            @Parameter(description = "Product ID") @PathVariable Long productId);
+            @Parameter(description = "Product ID")             @PathVariable Long productId);
 
-    /**
-     * Get paginated list of all prices
-     */
+    /** Returns all prices with pagination. */
     @Operation(summary = "Get all prices", description = "Get paginated list of all prices")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Prices successfully retrieved")

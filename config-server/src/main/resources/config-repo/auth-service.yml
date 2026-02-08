@@ -26,7 +26,6 @@ eureka:
   instance:
     prefer-ip-address: true
 
-# JWT secret (минимум 32 символа для HS256). В production задавать через переменную среды.
 jwt:
   secret: ${JWT_SECRET:itmo-highload-auth-secret-key-min-32-chars}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}

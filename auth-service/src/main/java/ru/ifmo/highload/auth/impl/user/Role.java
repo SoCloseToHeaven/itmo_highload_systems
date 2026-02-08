@@ -1,11 +1,8 @@
 package ru.ifmo.highload.auth.impl.user;
 
 /**
- * Роли пользователей системы (табачный магазин).
- * SUPERVISOR — создание пользователей, полный доступ.
- * LOGISTICIAN — загрузка товаров на склад (product-service), не может принимать заказы у клиентов.
- * CASHIER — кассир: работа с заказами (статусы), не может загружать товары на склад.
- * USER — клиент: создание заказов, просмотр своих заказов.
+ * User roles: SUPERVISOR (full access, create users), LOGISTICIAN (stock management),
+ * CASHIER (order status updates), USER (create/view own orders).
  */
 public enum Role {
     SUPERVISOR,

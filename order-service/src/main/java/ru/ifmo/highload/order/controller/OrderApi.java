@@ -16,14 +16,12 @@ import ru.ifmo.highload.order.dto.order.OrderResponse;
 import ru.ifmo.highload.order.dto.order.OrderStatus;
 
 /**
- * Order management API
+ * Order management API.
  */
 @Tag(name = "Order Management", description = "API for managing orders")
 public interface OrderApi {
 
-    /**
-     * Create a new order with transaction support
-     */
+    /** Creates a new order. */
     @Operation(summary = "Create order", description = "Create a new order with transaction support")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Order successfully created"),
@@ -32,11 +30,9 @@ public interface OrderApi {
     })
     @PostMapping
     Mono<ResponseEntity<OrderResponse>> createOrder(
-            @Parameter(description = "Order creation data") @Valid @RequestBody OrderCreateRequest request);
+            @Parameter(description = "Order creation data")             @Valid @RequestBody OrderCreateRequest request);
 
-    /**
-     * Get order details by ID
-     */
+    /** Returns order by ID. */
     @Operation(summary = "Get order by ID", description = "Get detailed order information by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order successfully retrieved"),
@@ -44,11 +40,9 @@ public interface OrderApi {
     })
     @GetMapping("/{orderId}")
     Mono<ResponseEntity<OrderResponse>> getOrder(
-            @Parameter(description = "Order ID") @PathVariable Long orderId);
+            @Parameter(description = "Order ID")             @PathVariable Long orderId);
 
-    /**
-     * Update order status (cancellation, completion, etc.) with transaction support
-     */
+    /** Updates order status. */
     @Operation(summary = "Update order status", description = "Update order status (cancellation, completion, etc.) with transaction support")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order status successfully updated"),
@@ -58,11 +52,9 @@ public interface OrderApi {
     @PutMapping("/{orderId}")
     Mono<ResponseEntity<OrderResponse>> updateOrder(
             @Parameter(description = "Order ID to update") @PathVariable Long orderId,
-            @Parameter(description = "New order status") @RequestBody OrderStatus status);
+            @Parameter(description = "New order status")             @RequestBody OrderStatus status);
 
-    /**
-     * Get paginated list of orders for a specific user (for administrators/support)
-     */
+    /** Returns orders for a user (administrators). */
     @Operation(summary = "Get user orders", description = "Get paginated list of orders for a specific user (for administrators/support)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User orders successfully retrieved")
@@ -75,11 +67,9 @@ public interface OrderApi {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
-                    }""") Pageable pageable);
+                    }""")             Pageable pageable);
 
-    /**
-     * Get paginated list of orders for the current user
-     */
+    /** Returns orders for the current user. */
     @Operation(summary = "Get my orders", description = "Get paginated list of orders for the current user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User orders successfully retrieved")
@@ -91,11 +81,9 @@ public interface OrderApi {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
-                    }""") Pageable pageable);
+                    }""")             Pageable pageable);
 
-    /**
-     * Get paginated list of all orders
-     */
+    /** Returns all orders with pagination. */
     @Operation(summary = "Get all orders", description = "Get paginated list of all orders")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Orders successfully retrieved")

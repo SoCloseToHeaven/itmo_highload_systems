@@ -18,7 +18,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Product Service API")
-                        .description("Управление товарами и категориями. Лабораторная работа №3. GET /api/product/** и GET /api/category/** — публичные; обновление товара и CRUD категорий — только LOGISTICIAN, SUPERVISOR.")
+                        .description("Product and category management. Public: GET /api/product/**, GET /api/category/**. Write access: LOGISTICIAN, SUPERVISOR.")
                         .version("1.0"))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
                 .components(new Components()

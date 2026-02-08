@@ -13,14 +13,12 @@ import ru.ifmo.highload.product.dto.product.ProductResponse;
 import ru.ifmo.highload.product.dto.product.ProductUpdateRequest;
 
 /**
- * Product management API
+ * Product management API.
  */
 @Tag(name = "Product Management", description = "API for managing products")
 public interface ProductApi {
 
-    /**
-     * Get paginated list of products for a specific category
-     */
+    /** Returns paginated products for a category. */
     @Operation(summary = "Get products by category", description = "Get paginated list of products for a specific category")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Products successfully retrieved"),
@@ -34,11 +32,9 @@ public interface ProductApi {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
-                    }""") Pageable pageable);
+                    }""")             Pageable pageable);
 
-    /**
-     * Get product details by ID
-     */
+    /** Returns product by ID. */
     @Operation(summary = "Get product by ID", description = "Get detailed product information by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product successfully retrieved"),
@@ -46,11 +42,9 @@ public interface ProductApi {
     })
     @GetMapping("/{id}")
     ResponseEntity<ProductResponse> getProduct(
-            @Parameter(description = "Product ID") @PathVariable Long id);
+            @Parameter(description = "Product ID")             @PathVariable Long id);
 
-    /**
-     * Update product information (for administrators)
-     */
+    /** Updates product (requires LOGISTICIAN or SUPERVISOR). */
     @Operation(summary = "Update product", description = "Update product information (for administrators)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product successfully updated"),
@@ -60,11 +54,9 @@ public interface ProductApi {
     @PutMapping("/{id}")
     ResponseEntity<ProductResponse> updateProduct(
             @Parameter(description = "Product ID to update") @PathVariable Long id,
-            @Parameter(description = "Updated product data") @RequestBody ProductUpdateRequest request);
+            @Parameter(description = "Updated product data")             @RequestBody ProductUpdateRequest request);
 
-    /**
-     * Search products by name with pagination
-     */
+    /** Searches products by name with pagination. */
     @Operation(summary = "Search products", description = "Search products by name with pagination")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Products successfully retrieved")
@@ -77,11 +69,9 @@ public interface ProductApi {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
-                    }""") Pageable pageable);
+                    }""")             Pageable pageable);
 
-    /**
-     * Get paginated list of all products
-     */
+    /** Returns all products with pagination. */
     @Operation(summary = "Get all products", description = "Get paginated list of all products")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Products successfully retrieved")

@@ -16,14 +16,12 @@ import ru.ifmo.highload.product.dto.category.CategoryResponse;
 import ru.ifmo.highload.product.dto.category.CategoryUpdateRequest;
 
 /**
- * Category management API
+ * Category management API.
  */
 @Tag(name = "Category Management", description = "API for managing product categories")
 public interface CategoryApi {
 
-    /**
-     * Get paginated list of all categories
-     */
+    /** Returns all categories with pagination. */
     @Operation(summary = "Get all categories", description = "Get paginated list of all categories")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Categories successfully retrieved")
@@ -35,11 +33,9 @@ public interface CategoryApi {
                       "page": 0,
                       "size": 1,
                       "sort": "string"
-                    }""") Pageable pageable);
+                    }""")             Pageable pageable);
 
-    /**
-     * Create a new product category
-     */
+    /** Creates a new category. */
     @Operation(summary = "Create category", description = "Create a new product category")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Category successfully created"),
@@ -48,11 +44,9 @@ public interface CategoryApi {
     })
     @PostMapping
     ResponseEntity<CategoryResponse> createCategory(
-            @Parameter(description = "Category creation data") @Valid @RequestBody CategoryCreateRequest request);
+            @Parameter(description = "Category creation data")             @Valid @RequestBody CategoryCreateRequest request);
 
-    /**
-     * Update existing category
-     */
+    /** Updates an existing category. */
     @Operation(summary = "Update category", description = "Update existing category")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Category successfully updated"),
@@ -62,11 +56,9 @@ public interface CategoryApi {
     @PutMapping("/{id}")
     ResponseEntity<CategoryResponse> updateCategory(
             @Parameter(description = "Category ID to update") @PathVariable Long id,
-            @Parameter(description = "Updated category data") @Valid @RequestBody CategoryUpdateRequest request);
+            @Parameter(description = "Updated category data")             @Valid @RequestBody CategoryUpdateRequest request);
 
-    /**
-     * Delete category by ID
-     */
+    /** Deletes category by ID. */
     @Operation(summary = "Delete category", description = "Delete category by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Category successfully deleted"),

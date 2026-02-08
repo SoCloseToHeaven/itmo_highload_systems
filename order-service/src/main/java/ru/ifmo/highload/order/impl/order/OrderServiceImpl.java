@@ -70,7 +70,6 @@ public class OrderServiceImpl implements OrderService {
 
             orderProducts.add(orderProduct);
 
-            // Update stock through product service
             ProductUpdateRequest updateRequest = new ProductUpdateRequest();
             updateRequest.setName(productResponse.getName());
             updateRequest.setDescription(productResponse.getDescription());

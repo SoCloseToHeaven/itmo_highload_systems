@@ -116,10 +116,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAll(pageable).map(this::toProductResponse);
     }
 
-    /**
-     * Convert Product entity to ProductResponse DTO
-     * Retrieves product categories through ProductCategoryRepository
-     */
+    /** Converts Product to ProductResponse, loading categories via ProductCategoryRepository. */
     private ProductResponse toProductResponse(Product product) {
         List<ProductCategory> productCategories = productCategoryRepository.findByProductId(product.getId());
         List<CategoryResponse> categories = productCategories.stream()
@@ -127,7 +124,7 @@ public class ProductServiceImpl implements ProductService {
                     try {
                         return categoryService.getCategoryById(pc.getCategoryId());
                     } catch (RuntimeException e) {
-                        return null; // Skip non-existent categories
+                        return null;
                     }
                 })
                 .filter(Objects::nonNull)

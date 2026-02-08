@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Eureka Server
   eureka-server:
     build: ./eureka-server
     container_name: eureka-server

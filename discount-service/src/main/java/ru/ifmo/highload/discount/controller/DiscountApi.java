@@ -18,14 +18,12 @@ import ru.ifmo.highload.discount.dto.discount.DiscountUpdateRequest;
 import java.util.List;
 
 /**
- * Discount management API for administrators
+ * Discount management API (administrators).
  */
 @Tag(name = "Discount Management", description = "API for managing product discounts (for administrators)")
 public interface DiscountApi {
 
-    /**
-     * Create a new discount for a product
-     */
+    /** Creates a new discount. */
     @Operation(summary = "Create discount", description = "Create a new discount for a product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Discount successfully created"),
@@ -34,11 +32,9 @@ public interface DiscountApi {
     })
     @PostMapping
     ResponseEntity<DiscountResponse> createDiscount(
-            @Parameter(description = "Discount creation data") @Valid @RequestBody DiscountCreateRequest request);
+            @Parameter(description = "Discount creation data")             @Valid @RequestBody DiscountCreateRequest request);
 
-    /**
-     * Update existing discount
-     */
+    /** Updates an existing discount. */
     @Operation(summary = "Update discount", description = "Update existing discount")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Discount successfully updated"),
@@ -48,11 +44,9 @@ public interface DiscountApi {
     @PutMapping("/{discountId}")
     ResponseEntity<DiscountResponse> updateDiscount(
             @Parameter(description = "Discount ID to update") @PathVariable Long discountId,
-            @Parameter(description = "Updated discount data") @Valid @RequestBody DiscountUpdateRequest request);
+            @Parameter(description = "Updated discount data")             @Valid @RequestBody DiscountUpdateRequest request);
 
-    /**
-     * Delete discount by ID
-     */
+    /** Deletes discount by ID. */
     @Operation(summary = "Delete discount", description = "Delete discount by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Discount successfully deleted"),
@@ -60,11 +54,9 @@ public interface DiscountApi {
     })
     @DeleteMapping("/{discountId}")
     ResponseEntity<Void> deleteDiscount(
-            @Parameter(description = "Discount ID to delete") @PathVariable Long discountId);
+            @Parameter(description = "Discount ID to delete")             @PathVariable Long discountId);
 
-    /**
-     * Get list of currently active discounts
-     */
+    /** Returns currently active discounts. */
     @Operation(summary = "Get active discounts", description = "Get list of currently active discounts")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Active discounts successfully retrieved")
@@ -72,9 +64,7 @@ public interface DiscountApi {
     @GetMapping("/active")
     ResponseEntity<List<DiscountResponse>> getActiveDiscounts();
 
-    /**
-     * Get paginated list of all discounts
-     */
+    /** Returns all discounts with pagination. */
     @Operation(summary = "Get all discounts", description = "Get paginated list of all discounts")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Discounts successfully retrieved")
