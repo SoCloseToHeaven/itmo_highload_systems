@@ -27,8 +27,10 @@ public interface DiscountApi {
     @Operation(summary = "Create discount", description = "Create a new discount for a product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Discount successfully created"),
-            @ApiResponse(responseCode = "404", description = "Product or price not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid date range")
+            @ApiResponse(responseCode = "400", description = "Invalid date range"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires SUPERVISOR)"),
+            @ApiResponse(responseCode = "404", description = "Product or price not found")
     })
     @PostMapping
     ResponseEntity<DiscountResponse> createDiscount(
@@ -38,8 +40,10 @@ public interface DiscountApi {
     @Operation(summary = "Update discount", description = "Update existing discount")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Discount successfully updated"),
-            @ApiResponse(responseCode = "404", description = "Discount not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid date range")
+            @ApiResponse(responseCode = "400", description = "Invalid date range"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires SUPERVISOR)"),
+            @ApiResponse(responseCode = "404", description = "Discount not found")
     })
     @PutMapping("/{discountId}")
     ResponseEntity<DiscountResponse> updateDiscount(
@@ -50,6 +54,8 @@ public interface DiscountApi {
     @Operation(summary = "Delete discount", description = "Delete discount by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Discount successfully deleted"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires SUPERVISOR)"),
             @ApiResponse(responseCode = "404", description = "Discount not found")
     })
     @DeleteMapping("/{discountId}")

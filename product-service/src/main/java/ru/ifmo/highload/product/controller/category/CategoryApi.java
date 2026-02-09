@@ -40,6 +40,8 @@ public interface CategoryApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Category successfully created"),
             @ApiResponse(responseCode = "400", description = "Invalid data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
             @ApiResponse(responseCode = "409", description = "Category with this name already exists")
     })
     @PostMapping
@@ -50,8 +52,10 @@ public interface CategoryApi {
     @Operation(summary = "Update category", description = "Update existing category")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Category successfully updated"),
-            @ApiResponse(responseCode = "404", description = "Category not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid data")
+            @ApiResponse(responseCode = "400", description = "Invalid data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
     })
     @PutMapping("/{id}")
     ResponseEntity<CategoryResponse> updateCategory(
@@ -62,6 +66,8 @@ public interface CategoryApi {
     @Operation(summary = "Delete category", description = "Delete category by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Category successfully deleted"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
             @ApiResponse(responseCode = "404", description = "Category not found"),
             @ApiResponse(responseCode = "409", description = "Cannot delete category with child categories")
     })

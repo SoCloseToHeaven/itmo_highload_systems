@@ -26,6 +26,8 @@ public interface OrderApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Order successfully created"),
             @ApiResponse(responseCode = "400", description = "Invalid order data or insufficient stock"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role"),
             @ApiResponse(responseCode = "404", description = "Product not found")
     })
     @PostMapping
@@ -36,6 +38,8 @@ public interface OrderApi {
     @Operation(summary = "Get order by ID", description = "Get detailed order information by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role"),
             @ApiResponse(responseCode = "404", description = "Order not found")
     })
     @GetMapping("/{orderId}")
@@ -46,8 +50,10 @@ public interface OrderApi {
     @Operation(summary = "Update order status", description = "Update order status (cancellation, completion, etc.) with transaction support")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order status successfully updated"),
-            @ApiResponse(responseCode = "404", description = "Order not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid status transition")
+            @ApiResponse(responseCode = "400", description = "Invalid status transition"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
     })
     @PutMapping("/{orderId}")
     Mono<ResponseEntity<OrderResponse>> updateOrder(
@@ -57,7 +63,9 @@ public interface OrderApi {
     /** Returns orders for a user (administrators). */
     @Operation(summary = "Get user orders", description = "Get paginated list of orders for a specific user (for administrators/support)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User orders successfully retrieved")
+            @ApiResponse(responseCode = "200", description = "User orders successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role")
     })
     @GetMapping("/user/{userId}")
     Mono<ResponseEntity<Page<OrderResponse>>> getUserOrders(
@@ -72,7 +80,9 @@ public interface OrderApi {
     /** Returns orders for the current user. */
     @Operation(summary = "Get my orders", description = "Get paginated list of orders for the current user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User orders successfully retrieved")
+            @ApiResponse(responseCode = "200", description = "User orders successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role")
     })
     @GetMapping("/my")
     Mono<ResponseEntity<Page<OrderResponse>>> getMyOrders(
@@ -86,7 +96,9 @@ public interface OrderApi {
     /** Returns all orders with pagination. */
     @Operation(summary = "Get all orders", description = "Get paginated list of all orders")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Orders successfully retrieved")
+            @ApiResponse(responseCode = "200", description = "Orders successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role")
     })
     @GetMapping
     Mono<ResponseEntity<Page<OrderResponse>>> getAllOrders(

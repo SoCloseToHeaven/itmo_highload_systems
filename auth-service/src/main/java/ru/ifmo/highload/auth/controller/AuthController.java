@@ -1,6 +1,8 @@
 package ru.ifmo.highload.auth.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,12 @@ public class AuthController {
 
     @PostMapping("/users")
     @Operation(summary = "Создать пользователя", description = "Только супервайзер может создавать пользователей")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "User created"),
+            @ApiResponse(responseCode = "400", description = "Invalid data or duplicate username"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires SUPERVISOR)")
+    })
     public ResponseEntity<UserResponse> createUser(
             @AuthenticationPrincipal UserDetails currentUser,
             @Valid @RequestBody UserCreateRequest request) {
@@ -42,18 +50,33 @@ public class AuthController {
 
     @GetMapping("/users")
     @Operation(summary = "Список пользователей", description = "Только супервайзер")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of users"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires SUPERVISOR)")
+    })
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(authService.getAllUsers());
     }
 
     @GetMapping("/me")
     @Operation(summary = "Текущий пользователь", description = "Данные текущего пользователя (пароль не отдаётся)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Current user"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated")
+    })
     public ResponseEntity<UserResponse> getMe(@AuthenticationPrincipal UserDetails currentUser) {
         return ResponseEntity.ok(authService.getCurrentUser(currentUser.getUsername()));
     }
 
     @GetMapping("/users/{id}")
     @Operation(summary = "Пользователь по ID", description = "Только супервайзер")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User by ID"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires SUPERVISOR)"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(authService.getUserById(id));
     }

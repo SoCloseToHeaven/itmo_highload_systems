@@ -20,7 +20,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Auth Service API")
-                        .description("Authentication and user management.")
+                        .description("Authentication and user management. 401 = not authenticated; 403 = authenticated but insufficient role.")
                         .version("1.0"))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
                 .addSecurityItem(new SecurityRequirement()

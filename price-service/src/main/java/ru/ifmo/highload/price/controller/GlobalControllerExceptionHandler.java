@@ -8,6 +8,7 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +46,16 @@ public class GlobalControllerExceptionHandler {
         response.setPath(exchange.getRequest().getURI().getPath());
         response.setTimestamp(ZonedDateTime.now());
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public Mono<ResponseEntity<HttpErrorResponse>> handleAccessDeniedException(AccessDeniedException ex, org.springframework.web.server.ServerWebExchange exchange) {
+        HttpErrorResponse response = new HttpErrorResponse();
+        response.setError("Доступ запрещён");
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.setPath(exchange.getRequest().getURI().getPath());
+        response.setTimestamp(ZonedDateTime.now());
+        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body(response));
     }
 
     @ExceptionHandler(WebExchangeBindException.class)

@@ -113,13 +113,40 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void createUser_WithoutAuth_ShouldReturn403() throws Exception {
+    void createUser_WithoutAuth_ShouldReturn401() throws Exception {
         UserCreateRequest request = new UserCreateRequest();
         request.setUsername("newuser");
         request.setPassword("pass1234");
         request.setRole(Role.USER);
 
         mockMvc.perform(post("/api/auth/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void createUser_AsNonSupervisor_ShouldReturn403() throws Exception {
+        UserCreateRequest createRequest = new UserCreateRequest();
+        createRequest.setUsername("cashier1");
+        createRequest.setPassword("pass1234");
+        createRequest.setRole(Role.CASHIER);
+        String createResponse = mockMvc.perform(post("/api/auth/users")
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(supervisorId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        Long cashierId = objectMapper.readTree(createResponse).get("id").asLong();
+
+        UserCreateRequest request = new UserCreateRequest();
+        request.setUsername("newuser");
+        request.setPassword("pass1234");
+        request.setRole(Role.USER);
+        mockMvc.perform(post("/api/auth/users")
+                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, String.valueOf(cashierId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -136,9 +163,9 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void getMe_WithoutToken_ShouldReturn401Or403() throws Exception {
+    void getMe_WithoutToken_ShouldReturn401() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -200,9 +227,9 @@ class AuthIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void getUserById_WithoutAuth_ShouldReturn403() throws Exception {
+    void getUserById_WithoutAuth_ShouldReturn401() throws Exception {
         mockMvc.perform(get("/api/auth/users/1"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     private String loginAndGetToken(String username, String pwd) throws Exception {

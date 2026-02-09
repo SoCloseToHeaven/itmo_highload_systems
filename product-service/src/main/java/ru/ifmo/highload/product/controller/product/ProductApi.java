@@ -48,8 +48,10 @@ public interface ProductApi {
     @Operation(summary = "Update product", description = "Update product information (for administrators)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product successfully updated"),
-            @ApiResponse(responseCode = "404", description = "Product not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid data")
+            @ApiResponse(responseCode = "400", description = "Invalid data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     @PutMapping("/{id}")
     ResponseEntity<ProductResponse> updateProduct(

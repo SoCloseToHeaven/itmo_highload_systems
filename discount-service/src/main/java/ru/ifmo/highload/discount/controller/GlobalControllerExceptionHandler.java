@@ -9,6 +9,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -46,6 +47,18 @@ public class GlobalControllerExceptionHandler {
         HttpErrorResponse response = new HttpErrorResponse();
         response.setError(ex.getMessage());
         response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setPath(req.getRequestURI());
+        response.setTimestamp(ZonedDateTime.now());
+        return response;
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseBody
+    HttpErrorResponse handleAccessDeniedException(HttpServletRequest req, AccessDeniedException ex) {
+        HttpErrorResponse response = new HttpErrorResponse();
+        response.setError("Доступ запрещён");
+        response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setPath(req.getRequestURI());
         response.setTimestamp(ZonedDateTime.now());
         return response;

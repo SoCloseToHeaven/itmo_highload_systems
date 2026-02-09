@@ -25,6 +25,8 @@ public interface PriceApi {
     @Operation(summary = "Create price", description = "Create a new price for a product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Price successfully created"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
             @ApiResponse(responseCode = "404", description = "Product not found"),
             @ApiResponse(responseCode = "409", description = "Price for this product already exists")
     })
@@ -36,6 +38,8 @@ public interface PriceApi {
     @Operation(summary = "Update price by ID", description = "Update existing price by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Price successfully updated"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
             @ApiResponse(responseCode = "404", description = "Price not found")
     })
     @PutMapping("/{priceId}")
@@ -47,6 +51,8 @@ public interface PriceApi {
     @Operation(summary = "Delete price by ID", description = "Delete price by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Price successfully deleted"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
             @ApiResponse(responseCode = "404", description = "Price not found")
     })
     @DeleteMapping("/{priceId}")
@@ -57,6 +63,8 @@ public interface PriceApi {
     @Operation(summary = "Update price by product ID", description = "Update price for a specific product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Price successfully updated"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
             @ApiResponse(responseCode = "404", description = "Price for this product not found")
     })
     @PutMapping("/product/{productId}")
@@ -68,6 +76,8 @@ public interface PriceApi {
     @Operation(summary = "Delete price by product ID", description = "Delete price for a specific product")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Price successfully deleted"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized – not authenticated"),
+            @ApiResponse(responseCode = "403", description = "Forbidden – authenticated but insufficient role (requires LOGISTICIAN or SUPERVISOR)"),
             @ApiResponse(responseCode = "404", description = "Price for this product not found")
     })
     @DeleteMapping("/product/{productId}")
