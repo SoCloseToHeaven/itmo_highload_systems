@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .accessDeniedHandler((exchange, denied) -> writeJsonError(exchange, "Access denied", HttpStatus.FORBIDDEN)))
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/api/order/**").authenticated()
-                        .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/webjars/swagger-ui/**").permitAll()
+                        .pathMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/webjars/swagger-ui/**").permitAll()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
