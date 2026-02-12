@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.discount.api.DiscountService;
 import ru.ifmo.highload.discount.dto.discount.DiscountCreateRequest;
@@ -21,16 +22,19 @@ public class DiscountController implements DiscountApi {
     private final DiscountService discountService;
 
     @Override
+    @PreAuthorize("hasRole('SUPERVISOR')")
     public ResponseEntity<DiscountResponse> createDiscount(DiscountCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(discountService.createDiscount(request));
     }
 
     @Override
+    @PreAuthorize("hasRole('SUPERVISOR')")
     public ResponseEntity<DiscountResponse> updateDiscount(Long discountId, DiscountUpdateRequest request) {
         return ResponseEntity.ok(discountService.updateDiscount(discountId, request));
     }
 
     @Override
+    @PreAuthorize("hasRole('SUPERVISOR')")
     public ResponseEntity<Void> deleteDiscount(Long discountId) {
         discountService.deleteDiscount(discountId);
         return ResponseEntity.noContent().build();

@@ -1,12 +1,14 @@
 package ru.ifmo.highload.price.controller;
 
 import jakarta.validation.ConstraintViolation;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalControllerExceptionHandler {
 
@@ -43,6 +46,16 @@ public class GlobalControllerExceptionHandler {
         response.setPath(exchange.getRequest().getURI().getPath());
         response.setTimestamp(ZonedDateTime.now());
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public Mono<ResponseEntity<HttpErrorResponse>> handleAccessDeniedException(AccessDeniedException ex, org.springframework.web.server.ServerWebExchange exchange) {
+        HttpErrorResponse response = new HttpErrorResponse();
+        response.setError("Доступ запрещён");
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.setPath(exchange.getRequest().getURI().getPath());
+        response.setTimestamp(ZonedDateTime.now());
+        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body(response));
     }
 
     @ExceptionHandler(WebExchangeBindException.class)
@@ -90,27 +103,35 @@ public class GlobalControllerExceptionHandler {
 
     @ExceptionHandler(org.springframework.r2dbc.BadSqlGrammarException.class)
     public Mono<ResponseEntity<HttpErrorResponse>> handleBadSqlGrammarException(org.springframework.r2dbc.BadSqlGrammarException ex, org.springframework.web.server.ServerWebExchange exchange) {
+        log.error("Ошибка доступа к данным при запросе {}: ", exchange.getRequest().getURI().getPath(), ex);
         HttpErrorResponse response = new HttpErrorResponse();
-        // SQL-ошибки (таблица не найдена, ошибка маппинга и т.д.) — не маскируем под 404
-        response.setError("Ошибка доступа к данным: " + (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage()));
-        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.setError("Некорректный запрос. Запрос не может быть обработан.");
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setPath(exchange.getRequest().getURI().getPath());
         response.setTimestamp(ZonedDateTime.now());
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, NullPointerException.class})
+    public Mono<ResponseEntity<HttpErrorResponse>> handleIllegalOrNullPointerException(RuntimeException ex, org.springframework.web.server.ServerWebExchange exchange) {
+        log.debug("Ошибка валидации запроса: {}", ex.getMessage());
+        HttpErrorResponse response = new HttpErrorResponse();
+        response.setError("Некорректный запрос. Проверьте передаваемые параметры.");
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setPath(exchange.getRequest().getURI().getPath());
+        response.setTimestamp(ZonedDateTime.now());
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
     }
 
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<HttpErrorResponse>> handleGenericException(Exception ex, org.springframework.web.server.ServerWebExchange exchange) {
+        log.error("Необработанное исключение при запросе {}: ", exchange.getRequest().getURI().getPath(), ex);
         HttpErrorResponse response = new HttpErrorResponse();
-        response.setError("Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже.");
-        response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.setError("Некорректный запрос. Запрос не может быть обработан.");
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
         response.setPath(exchange.getRequest().getURI().getPath());
         response.setTimestamp(ZonedDateTime.now());
-        
-        // Логируем реальную ошибку для разработчиков
-        ex.printStackTrace();
-        
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response));
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response));
     }
 }
 

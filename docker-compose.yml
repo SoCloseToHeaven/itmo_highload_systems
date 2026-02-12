@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Eureka Server
   eureka-server:
     build: ./eureka-server
     container_name: eureka-server
@@ -84,7 +83,40 @@ services:
     networks:
       - microservices-net
 
+  postgres-auth:
+    image: postgres:15.5
+    container_name: postgres-auth
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+
   # Microservices
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      - eureka-server
+      - config-server
+      - postgres-auth
+    networks:
+      - microservices-net
+    environment:
+      - DB_USERNAME=${DB_USERNAME:-admin}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    volumes:
+      - gradle-cache:/root/.gradle
+
   product-service:
     build: ./product-service
     container_name: product-service
@@ -99,6 +131,7 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
     volumes:
       - gradle-cache:/root/.gradle
@@ -117,6 +150,7 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
     volumes:
       - gradle-cache:/root/.gradle
@@ -137,6 +171,7 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
     volumes:
       - gradle-cache:/root/.gradle
@@ -157,6 +192,7 @@ services:
     environment:
       - DB_USERNAME=${DB_USERNAME:-admin}
       - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
     volumes:
       - gradle-cache:/root/.gradle
@@ -170,6 +206,7 @@ services:
     depends_on:
       - eureka-server
       - config-server
+      - auth-service
       - product-service
       - price-service
       - discount-service
@@ -190,4 +227,5 @@ volumes:
   postgres-price-data:
   postgres-discount-data:
   postgres-order-data:
+  postgres-auth-data:
   gradle-cache:  # Общий кэш для Gradle зависимостей всех сервисов

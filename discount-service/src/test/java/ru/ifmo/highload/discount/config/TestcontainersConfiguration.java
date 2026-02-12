@@ -29,6 +29,9 @@ import static org.mockito.Mockito.when;
 @Testcontainers
 public abstract class TestcontainersConfiguration {
 
+    protected static final String TEST_USER_ID_HEADER = "1";
+    protected static final String TEST_SUPERVISOR_ROLES_HEADER = "SUPERVISOR";
+
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("testdb")

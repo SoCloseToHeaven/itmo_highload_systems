@@ -8,6 +8,9 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    url: jdbc:postgresql://postgres-price:5432/price_db
+    user: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:root}
 
 server:
   port: 8082

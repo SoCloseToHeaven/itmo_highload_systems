@@ -8,7 +8,7 @@ import ru.ifmo.highload.order.dto.order.OrderResponse;
 import ru.ifmo.highload.order.dto.order.OrderStatus;
 
 public interface OrderService {
-    Mono<OrderResponse> createOrder(OrderCreateRequest request);
+    Mono<OrderResponse> createOrder(OrderCreateRequest request, Long userId);
 
     Mono<OrderResponse> getOrderById(Long id);
 
@@ -16,7 +16,7 @@ public interface OrderService {
 
     Mono<Page<OrderResponse>> getUserOrders(Long userId, Pageable pageable);
 
-    Mono<Page<OrderResponse>> getMyOrders(Pageable pageable);
+    Mono<Page<OrderResponse>> getMyOrders(Long userId, Pageable pageable);
 
     Mono<Page<OrderResponse>> getAllOrders(Pageable pageable);
 }

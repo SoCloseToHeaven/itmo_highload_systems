@@ -2,13 +2,7 @@ package ru.ifmo.highload.price.dto.external.product;
 
 import lombok.Data;
 
-/**
- * DTO скопирован из product-service
- * Источник: product-service/dto/product/ProductResponse.java
- * Версия API: v1
- * 
- * ВАЖНО: При изменении в product-service необходимо синхронизировать этот класс!
- */
+/** Product DTO (mirrors product-service). Sync when product-service DTO changes. */
 @Data
 public class ProductResponse {
     private Long id;

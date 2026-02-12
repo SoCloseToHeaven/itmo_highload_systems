@@ -42,7 +42,6 @@ class CategoryServiceImpl implements CategoryService {
             }
         }
 
-        // Check name uniqueness within parent category
         if (categoryRepository.existsByNameAndParentCategoryId(request.getName(), request.getParentCategoryId())) {
             throw new BadRequestException("Категория с этим именем уже существует у родителя");
         }
@@ -67,7 +66,6 @@ class CategoryServiceImpl implements CategoryService {
                 throw new ResourceNotFoundException("Не найдена родительская категория с id: " + request.getParentCategoryId());
             }
 
-            // Check for circular dependency
             if (isCircularDependency(id, request.getParentCategoryId())) {
                 throw new BadRequestException("Циклическая зависимость недопустима");
             }
@@ -101,9 +99,7 @@ class CategoryServiceImpl implements CategoryService {
         categoryRepository.deleteById(id);
     }
 
-    /**
-     * Convert Category entity to CategoryResponse DTO
-     */
+    /** Converts Category entity to CategoryResponse DTO. */
     private CategoryResponse toCategoryResponse(Category category) {
         CategoryResponse response = new CategoryResponse();
         response.setId(category.getId());

@@ -18,6 +18,9 @@ class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     @NotNull
     @Column(name = "total_sum", nullable = false)
     private Integer totalSum;

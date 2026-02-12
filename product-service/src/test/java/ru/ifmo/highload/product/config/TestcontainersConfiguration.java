@@ -21,6 +21,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public abstract class TestcontainersConfiguration {
 
+    protected static final String TEST_USER_ID_HEADER = "1";
+    protected static final String TEST_LOGISTICIAN_ROLES_HEADER = "LOGISTICIAN";
+
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("testdb")

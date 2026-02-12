@@ -5,6 +5,12 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
         - id: product-service
           uri: lb://product-service
           predicates:
@@ -42,4 +48,7 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+jwt:
+  secret: ${JWT_SECRET:itmo-highload-auth-secret-key-min-32-chars}
 

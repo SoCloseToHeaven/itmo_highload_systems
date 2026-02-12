@@ -74,7 +74,7 @@ class OrderServiceImplTest {
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder, finalOrder);
         when(orderProductRepository.saveAll(anyList())).thenReturn(List.of());
 
-        StepVerifier.create(orderService.createOrder(request))
+        StepVerifier.create(orderService.createOrder(request, 1L))
                 .assertNext(result -> {
                     assertNotNull(result);
                     assertEquals(1L, result.getId());
@@ -91,7 +91,7 @@ class OrderServiceImplTest {
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(List.of());
 
-        StepVerifier.create(orderService.createOrder(request))
+        StepVerifier.create(orderService.createOrder(request, 1L))
                 .expectError(BadRequestException.class)
                 .verify();
 
@@ -164,7 +164,7 @@ class OrderServiceImplTest {
         OrderCreateRequest request = new OrderCreateRequest();
         request.setItems(null);
 
-        StepVerifier.create(orderService.createOrder(request))
+        StepVerifier.create(orderService.createOrder(request, 1L))
                 .expectError(BadRequestException.class)
                 .verify();
 
@@ -215,7 +215,7 @@ class OrderServiceImplTest {
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder, finalOrder);
         when(orderProductRepository.saveAll(anyList())).thenReturn(List.of());
 
-        StepVerifier.create(orderService.createOrder(request))
+        StepVerifier.create(orderService.createOrder(request, 1L))
                 .assertNext(result -> {
                     assertNotNull(result);
                     assertEquals(1L, result.getId());
@@ -242,7 +242,7 @@ class OrderServiceImplTest {
         when(productServiceClient.getProductById(999L))
                 .thenThrow(new RuntimeException("Product not found"));
 
-        StepVerifier.create(orderService.createOrder(request))
+        StepVerifier.create(orderService.createOrder(request, 1L))
                 .expectError(RuntimeException.class)
                 .verify();
 
@@ -274,7 +274,7 @@ class OrderServiceImplTest {
         when(priceServiceClient.getCurrentPriceForProduct(1L))
                 .thenThrow(new RuntimeException("Price not found"));
 
-        StepVerifier.create(orderService.createOrder(request))
+        StepVerifier.create(orderService.createOrder(request, 1L))
                 .expectError(RuntimeException.class)
                 .verify();
 
@@ -304,7 +304,7 @@ class OrderServiceImplTest {
         when(orderRepository.save(any(Order.class))).thenReturn(initialOrder);
         when(productServiceClient.getProductById(1L)).thenReturn(product);
 
-        StepVerifier.create(orderService.createOrder(request))
+        StepVerifier.create(orderService.createOrder(request, 1L))
                 .expectError(BadRequestException.class)
                 .verify();
 
@@ -413,7 +413,7 @@ class OrderServiceImplTest {
 
         Page<Order> orderPage = new PageImpl<>(List.of(order1, order2));
 
-        when(orderRepository.findAll(pageable)).thenReturn(orderPage);
+        when(orderRepository.findByUserId(1L, pageable)).thenReturn(orderPage);
         when(orderProductRepository.findByOrderId(anyLong())).thenReturn(List.of());
 
         StepVerifier.create(orderService.getUserOrders(1L, pageable))
@@ -423,7 +423,7 @@ class OrderServiceImplTest {
                 })
                 .verifyComplete();
 
-        verify(orderRepository, times(1)).findAll(pageable);
+        verify(orderRepository, times(1)).findByUserId(1L, pageable);
     }
 
     @Test
@@ -431,7 +431,7 @@ class OrderServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Order> emptyPage = new PageImpl<>(List.of());
 
-        when(orderRepository.findAll(pageable)).thenReturn(emptyPage);
+        when(orderRepository.findByUserId(1L, pageable)).thenReturn(emptyPage);
 
         StepVerifier.create(orderService.getUserOrders(1L, pageable))
                 .assertNext(result -> {
@@ -439,6 +439,8 @@ class OrderServiceImplTest {
                     assertTrue(result.getContent().isEmpty());
                 })
                 .verifyComplete();
+
+        verify(orderRepository, times(1)).findByUserId(1L, pageable);
     }
 
     @Test
@@ -451,10 +453,10 @@ class OrderServiceImplTest {
 
         Page<Order> orderPage = new PageImpl<>(List.of(order));
 
-        when(orderRepository.findAll(pageable)).thenReturn(orderPage);
+        when(orderRepository.findByUserId(1L, pageable)).thenReturn(orderPage);
         when(orderProductRepository.findByOrderId(anyLong())).thenReturn(List.of());
 
-        StepVerifier.create(orderService.getMyOrders(pageable))
+        StepVerifier.create(orderService.getMyOrders(1L, pageable))
                 .assertNext(result -> {
                     assertNotNull(result);
                     assertEquals(1, result.getContent().size());
@@ -462,7 +464,7 @@ class OrderServiceImplTest {
                 })
                 .verifyComplete();
 
-        verify(orderRepository, times(1)).findAll(pageable);
+        verify(orderRepository, times(1)).findByUserId(1L, pageable);
     }
 
     @Test
@@ -470,9 +472,9 @@ class OrderServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Order> emptyPage = new PageImpl<>(List.of());
 
-        when(orderRepository.findAll(pageable)).thenReturn(emptyPage);
+        when(orderRepository.findByUserId(1L, pageable)).thenReturn(emptyPage);
 
-        StepVerifier.create(orderService.getMyOrders(pageable))
+        StepVerifier.create(orderService.getMyOrders(1L, pageable))
                 .assertNext(result -> {
                     assertNotNull(result);
                     assertTrue(result.getContent().isEmpty());
