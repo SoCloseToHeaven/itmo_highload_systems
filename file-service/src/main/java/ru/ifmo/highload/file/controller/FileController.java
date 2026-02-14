@@ -1,7 +1,5 @@
 package ru.ifmo.highload.file.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
@@ -21,39 +19,38 @@ import java.io.InputStream;
 @RestController
 @RequestMapping("/api/file")
 @RequiredArgsConstructor
-@Tag(name = "File", description = "Product photos and file storage")
-public class FileController {
+public class FileController implements FileApi {
 
     private final FileService fileService;
     private final FileAccessService fileAccessService;
 
+    @Override
     @PostMapping(value = "/product/{productId}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload product photo (LOGISTICIAN, SUPERVISOR)")
     public ResponseEntity<FileInfo> uploadProductPhoto(
             @PathVariable Long productId,
             @RequestParam("file") MultipartFile file,
-            Authentication auth) {
+            Authentication authentication) {
         fileAccessService.requireCanUploadProductPhoto();
-        Long userId = (Long) auth.getPrincipal();
+        Long userId = (Long) authentication.getPrincipal();
         Long id = fileService.uploadProductPhoto(productId, file, userId);
         FileInfo info = fileService.getFileInfo(id);
         return ResponseEntity.ok(info);
     }
 
+    @Override
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Upload internal file (SUPERVISOR only)")
     public ResponseEntity<FileInfo> uploadFile(
             @RequestParam("file") MultipartFile file,
-            Authentication auth) {
+            Authentication authentication) {
         fileAccessService.requireCanUploadAnyFile();
-        Long userId = (Long) auth.getPrincipal();
+        Long userId = (Long) authentication.getPrincipal();
         Long id = fileService.uploadFile(file, userId);
         FileInfo info = fileService.getFileInfo(id);
         return ResponseEntity.ok(info);
     }
 
+    @Override
     @GetMapping("/{id}")
-    @Operation(summary = "Get file content. Product photos: any user. Other files: SUPERVISOR only")
     public ResponseEntity<InputStreamResource> getFile(@PathVariable Long id) {
         FileInfo info = fileService.getFileInfo(id);
         fileAccessService.requireCanRead(info);
@@ -64,31 +61,31 @@ public class FileController {
                 .body(new InputStreamResource(content));
     }
 
+    @Override
     @GetMapping("/{id}/info")
-    @Operation(summary = "Get file metadata. Same access rules as GET /{id}")
     public ResponseEntity<FileInfo> getFileInfo(@PathVariable Long id) {
         FileInfo info = fileService.getFileInfo(id);
         fileAccessService.requireCanRead(info);
         return ResponseEntity.ok(info);
     }
 
+    @Override
     @GetMapping("/product/{productId}")
-    @Operation(summary = "List product photos (any authenticated user)")
     public ResponseEntity<Page<FileInfo>> getProductPhotos(
             @PathVariable Long productId,
             Pageable pageable) {
         return ResponseEntity.ok(fileService.getProductPhotos(productId, pageable));
     }
 
+    @Override
     @GetMapping
-    @Operation(summary = "List all files (SUPERVISOR only)")
     public ResponseEntity<Page<FileInfo>> getAllFiles(Pageable pageable) {
         fileAccessService.requireCanListAllFiles();
         return ResponseEntity.ok(fileService.getAllFiles(pageable));
     }
 
+    @Override
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete file. Product photos: LOGISTICIAN, SUPERVISOR. Other: SUPERVISOR only")
     public ResponseEntity<Void> deleteFile(@PathVariable Long id) {
         FileInfo info = fileService.getFileInfo(id);
         fileAccessService.requireCanRead(info);

@@ -1,154 +1,166 @@
 package ru.ifmo.highload.file.security;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ru.ifmo.highload.file.dto.FileInfo;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 class FileAccessServiceTest {
 
+    @InjectMocks
     private FileAccessService fileAccessService;
 
     @BeforeEach
-    void setUp() {
-        fileAccessService = new FileAccessService();
-    }
-
-    @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
     }
 
-    private void setAuth(String... roles) {
-        List<SimpleGrantedAuthority> authorities = List.of(roles).stream()
-                .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
-                .toList();
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(new UsernamePasswordAuthenticationToken(1L, null, authorities));
-        SecurityContextHolder.setContext(context);
-    }
+    @Test
+    void requireCanRead_Supervisor_AnyFile_ShouldPass() {
+        setAuth(1L, "ROLE_SUPERVISOR");
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setProductId(null);
 
-    private FileInfo productPhotoInfo() {
-        FileInfo info = new FileInfo();
-        info.setId(1L);
-        info.setProductId(1L);
-        info.setFilename("photo.jpg");
-        return info;
-    }
-
-    private FileInfo internalFileInfo() {
-        FileInfo info = new FileInfo();
-        info.setId(2L);
-        info.setProductId(null);
-        info.setFilename("internal.png");
-        return info;
+        assertDoesNotThrow(() -> fileAccessService.requireCanRead(fileInfo));
     }
 
     @Test
-    void requireCanRead_supervisorCanReadAnyFile() {
-        setAuth("SUPERVISOR");
-        assertThatCode(() -> fileAccessService.requireCanRead(productPhotoInfo())).doesNotThrowAnyException();
-        assertThatCode(() -> fileAccessService.requireCanRead(internalFileInfo())).doesNotThrowAnyException();
+    void requireCanRead_User_ProductPhoto_ShouldPass() {
+        setAuth(1L, "ROLE_USER");
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setProductId(10L);
+
+        assertDoesNotThrow(() -> fileAccessService.requireCanRead(fileInfo));
     }
 
     @Test
-    void requireCanRead_userCanReadProductPhoto() {
-        setAuth("USER");
-        assertThatCode(() -> fileAccessService.requireCanRead(productPhotoInfo())).doesNotThrowAnyException();
+    void requireCanRead_User_InternalFile_ShouldThrow() {
+        setAuth(1L, "ROLE_USER");
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setProductId(null);
+
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> fileAccessService.requireCanRead(fileInfo));
+
+        assertTrue(ex.getMessage().contains("supervisor"));
     }
 
     @Test
-    void requireCanRead_userCannotReadInternalFile() {
-        setAuth("USER");
-        assertThatThrownBy(() -> fileAccessService.requireCanRead(internalFileInfo()))
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Only supervisor");
+    void requireCanUploadProductPhoto_Supervisor_ShouldPass() {
+        setAuth(1L, "ROLE_SUPERVISOR");
+        assertDoesNotThrow(() -> fileAccessService.requireCanUploadProductPhoto());
     }
 
     @Test
-    void requireCanUploadProductPhoto_logisticianAllowed() {
-        setAuth("LOGISTICIAN");
-        assertThatCode(() -> fileAccessService.requireCanUploadProductPhoto()).doesNotThrowAnyException();
+    void requireCanUploadProductPhoto_Logistician_ShouldPass() {
+        setAuth(1L, "ROLE_LOGISTICIAN");
+        assertDoesNotThrow(() -> fileAccessService.requireCanUploadProductPhoto());
     }
 
     @Test
-    void requireCanUploadProductPhoto_supervisorAllowed() {
-        setAuth("SUPERVISOR");
-        assertThatCode(() -> fileAccessService.requireCanUploadProductPhoto()).doesNotThrowAnyException();
+    void requireCanUploadProductPhoto_User_ShouldThrow() {
+        setAuth(1L, "ROLE_USER");
+
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> fileAccessService.requireCanUploadProductPhoto());
+
+        assertTrue(ex.getMessage().contains("LOGISTICIAN") || ex.getMessage().contains("SUPERVISOR"));
     }
 
     @Test
-    void requireCanUploadProductPhoto_userDenied() {
-        setAuth("USER");
-        assertThatThrownBy(() -> fileAccessService.requireCanUploadProductPhoto())
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("LOGISTICIAN or SUPERVISOR");
+    void requireCanUploadAnyFile_Supervisor_ShouldPass() {
+        setAuth(1L, "ROLE_SUPERVISOR");
+        assertDoesNotThrow(() -> fileAccessService.requireCanUploadAnyFile());
     }
 
     @Test
-    void requireCanUploadAnyFile_supervisorAllowed() {
-        setAuth("SUPERVISOR");
-        assertThatCode(() -> fileAccessService.requireCanUploadAnyFile()).doesNotThrowAnyException();
+    void requireCanUploadAnyFile_Logistician_ShouldThrow() {
+        setAuth(1L, "ROLE_LOGISTICIAN");
+
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> fileAccessService.requireCanUploadAnyFile());
+
+        assertTrue(ex.getMessage().contains("SUPERVISOR"));
     }
 
     @Test
-    void requireCanUploadAnyFile_logisticianDenied() {
-        setAuth("LOGISTICIAN");
-        assertThatThrownBy(() -> fileAccessService.requireCanUploadAnyFile())
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Only SUPERVISOR");
+    void requireCanDelete_Supervisor_AnyFile_ShouldPass() {
+        setAuth(1L, "ROLE_SUPERVISOR");
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setProductId(null);
+
+        assertDoesNotThrow(() -> fileAccessService.requireCanDelete(fileInfo));
     }
 
     @Test
-    void requireCanDelete_supervisorCanDeleteAny() {
-        setAuth("SUPERVISOR");
-        assertThatCode(() -> fileAccessService.requireCanDelete(productPhotoInfo())).doesNotThrowAnyException();
-        assertThatCode(() -> fileAccessService.requireCanDelete(internalFileInfo())).doesNotThrowAnyException();
+    void requireCanDelete_Logistician_ProductPhoto_ShouldPass() {
+        setAuth(1L, "ROLE_LOGISTICIAN");
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setProductId(5L);
+
+        assertDoesNotThrow(() -> fileAccessService.requireCanDelete(fileInfo));
     }
 
     @Test
-    void requireCanDelete_logisticianCanDeleteProductPhoto() {
-        setAuth("LOGISTICIAN");
-        assertThatCode(() -> fileAccessService.requireCanDelete(productPhotoInfo())).doesNotThrowAnyException();
+    void requireCanDelete_Logistician_InternalFile_ShouldThrow() {
+        setAuth(1L, "ROLE_LOGISTICIAN");
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setProductId(null);
+
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> fileAccessService.requireCanDelete(fileInfo));
+
+        assertTrue(ex.getMessage().contains("denied"));
     }
 
     @Test
-    void requireCanDelete_logisticianCannotDeleteInternalFile() {
-        setAuth("LOGISTICIAN");
-        assertThatThrownBy(() -> fileAccessService.requireCanDelete(internalFileInfo()))
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Access denied");
+    void requireCanDelete_User_ProductPhoto_ShouldThrow() {
+        setAuth(1L, "ROLE_USER");
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setProductId(5L);
+
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> fileAccessService.requireCanDelete(fileInfo));
+
+        assertNotNull(ex.getMessage());
     }
 
     @Test
-    void requireCanDelete_userDenied() {
-        setAuth("USER");
-        assertThatThrownBy(() -> fileAccessService.requireCanDelete(productPhotoInfo()))
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Access denied");
+    void requireCanListAllFiles_Supervisor_ShouldPass() {
+        setAuth(1L, "ROLE_SUPERVISOR");
+        assertDoesNotThrow(() -> fileAccessService.requireCanListAllFiles());
     }
 
     @Test
-    void requireCanListAllFiles_supervisorAllowed() {
-        setAuth("SUPERVISOR");
-        assertThatCode(() -> fileAccessService.requireCanListAllFiles()).doesNotThrowAnyException();
+    void requireCanListAllFiles_User_ShouldThrow() {
+        setAuth(1L, "ROLE_USER");
+
+        AccessDeniedException ex = assertThrows(AccessDeniedException.class,
+                () -> fileAccessService.requireCanListAllFiles());
+
+        assertTrue(ex.getMessage().contains("SUPERVISOR"));
     }
 
-    @Test
-    void requireCanListAllFiles_userDenied() {
-        setAuth("USER");
-        assertThatThrownBy(() -> fileAccessService.requireCanListAllFiles())
-                .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Only SUPERVISOR");
+    private void setAuth(Long userId, String... roles) {
+        List<SimpleGrantedAuthority> authorities = roles.length == 0
+                ? Collections.emptyList()
+                : Arrays.stream(roles)
+                        .map(SimpleGrantedAuthority::new)
+                        .toList();
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

@@ -12,21 +12,38 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     private static final String BEARER_AUTH = "bearerAuth";
+    private static final String X_USER_ID = "xUserId";
+    private static final String X_USER_ROLES = "xUserRoles";
 
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(new Info()
                         .title("File Service API")
-                        .description("Product photos. Upload: LOGISTICIAN, SUPERVISOR. Read product photos: any user. Read all/delete: SUPERVISOR.")
+                        .description("Product photos and file storage. Upload product photos: LOGISTICIAN, SUPERVISOR. Upload internal files: SUPERVISOR only. Read product photos: any authenticated user. Read internal files / list all: SUPERVISOR only.")
                         .version("1.0"))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
+                .addSecurityItem(new SecurityRequirement()
+                        .addList(X_USER_ID)
+                        .addList(X_USER_ROLES))
                 .components(new Components()
                         .addSecuritySchemes(BEARER_AUTH,
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description("JWT from auth-service (when calling via Gateway).")));
+                                        .description("JWT from auth-service (when calling via Gateway)."))
+                        .addSecuritySchemes(X_USER_ID,
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.APIKEY)
+                                        .in(SecurityScheme.In.HEADER)
+                                        .name("X-User-Id")
+                                        .description("User ID for isolated testing (no JWT)."))
+                        .addSecuritySchemes(X_USER_ROLES,
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.APIKEY)
+                                        .in(SecurityScheme.In.HEADER)
+                                        .name("X-User-Roles")
+                                        .description("Roles without ROLE_ prefix, e.g. SUPERVISOR or LOGISTICIAN,USER")));
     }
 }

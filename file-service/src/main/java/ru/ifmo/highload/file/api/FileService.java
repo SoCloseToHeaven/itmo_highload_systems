@@ -1,5 +1,7 @@
 package ru.ifmo.highload.file.api;
 
+import ru.ifmo.highload.file.dto.FileInfo;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;

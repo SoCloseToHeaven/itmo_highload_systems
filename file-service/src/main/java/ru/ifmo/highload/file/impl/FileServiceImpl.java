@@ -14,6 +14,7 @@ import ru.ifmo.highload.file.dto.external.ProductResponse;
 import ru.ifmo.highload.file.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.file.impl.exceptions.ResourceNotFoundException;
 
+import feign.FeignException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -40,7 +41,12 @@ public class FileServiceImpl implements FileService {
     @Override
     @Transactional
     public Long uploadProductPhoto(Long productId, MultipartFile file, Long userId) {
-        ProductResponse product = productServiceClient.getProductById(productId);
+        ProductResponse product;
+        try {
+            product = productServiceClient.getProductById(productId);
+        } catch (FeignException.NotFound e) {
+            throw new ResourceNotFoundException("Product not found: " + productId);
+        }
         if (product == null) {
             throw new ResourceNotFoundException("Product not found: " + productId);
         }

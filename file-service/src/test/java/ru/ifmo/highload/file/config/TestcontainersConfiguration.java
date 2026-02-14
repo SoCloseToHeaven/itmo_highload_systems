@@ -37,6 +37,13 @@ public abstract class TestcontainersConfiguration {
     @MockBean
     protected ProductServiceClient productServiceClient;
 
+    protected static final String HEADER_X_USER_ID = "X-User-Id";
+    protected static final String HEADER_X_USER_ROLES = "X-User-Roles";
+    protected static final String USER_ID = "1";
+    protected static final String ROLES_SUPERVISOR = "SUPERVISOR";
+    protected static final String ROLES_LOGISTICIAN = "LOGISTICIAN";
+    protected static final String ROLES_USER = "USER";
+
     static {
         postgres.start();
     }
@@ -50,13 +57,6 @@ public abstract class TestcontainersConfiguration {
         registry.add("spring.liquibase.enabled", () -> "true");
         registry.add("file.storage-path", () -> Path.of(System.getProperty("java.io.tmpdir"), "file-service-test-" + System.currentTimeMillis()).toString());
     }
-
-    protected static final String HEADER_X_USER_ID = "X-User-Id";
-    protected static final String HEADER_X_USER_ROLES = "X-User-Roles";
-    protected static final String USER_ID = "1";
-    protected static final String ROLES_SUPERVISOR = "SUPERVISOR";
-    protected static final String ROLES_LOGISTICIAN = "LOGISTICIAN";
-    protected static final String ROLES_USER = "USER";
 
     protected void setupMockProductClient() {
         ProductResponse product = new ProductResponse();

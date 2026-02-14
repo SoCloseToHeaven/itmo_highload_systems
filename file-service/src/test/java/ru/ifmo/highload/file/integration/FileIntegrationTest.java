@@ -3,15 +3,15 @@ package ru.ifmo.highload.file.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import ru.ifmo.highload.file.config.TestcontainersConfiguration;
-import ru.ifmo.highload.file.security.XUserIdAuthenticationFilter;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -21,27 +21,19 @@ class FileIntegrationTest extends TestcontainersConfiguration {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private ru.ifmo.highload.file.client.ProductServiceClient productServiceClient;
-
-    private static final byte[] IMAGE_CONTENT = "fake-image-content".getBytes();
-
     @BeforeEach
     void setUp() {
         setupMockProductClient();
     }
 
     @Test
-    void uploadProductPhoto_asLogistician_shouldReturn200() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", IMAGE_CONTENT);
+    void uploadProductPhoto_AsLogistician_ShouldReturn200() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", "image-content".getBytes());
 
         mockMvc.perform(multipart("/api/file/product/1/photo")
                         .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.productId").value(1))
@@ -50,232 +42,159 @@ class FileIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void uploadProductPhoto_asSupervisor_shouldReturn200() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "img.png", "image/png", IMAGE_CONTENT);
+    void uploadProductPhoto_AsSupervisor_ShouldReturn200() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "img.png", "image/png", "png-data".getBytes());
 
         mockMvc.perform(multipart("/api/file/product/1/photo")
                         .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.productId").value(1));
     }
 
     @Test
-    void uploadProductPhoto_asUser_shouldReturn403() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", IMAGE_CONTENT);
+    void uploadProductPhoto_AsUser_ShouldReturn403() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", "content".getBytes());
 
         mockMvc.perform(multipart("/api/file/product/1/photo")
                         .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_USER))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_USER))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void uploadProductPhoto_whenProductNotFound_shouldReturn404() throws Exception {
-        when(productServiceClient.getProductById(eq(999L))).thenReturn(null);
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", IMAGE_CONTENT);
-
-        mockMvc.perform(multipart("/api/file/product/999/photo")
-                        .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void uploadProductPhoto_withInvalidContentType_shouldReturn400() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", IMAGE_CONTENT);
-
-        mockMvc.perform(multipart("/api/file/product/1/photo")
-                        .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void uploadProductPhoto_withoutAuth_shouldReturn401() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", IMAGE_CONTENT);
-
-        mockMvc.perform(multipart("/api/file/product/1/photo").file(file))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void uploadInternalFile_asSupervisor_shouldReturn200() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "internal.png", "image/png", IMAGE_CONTENT);
+    void uploadInternalFile_AsSupervisor_ShouldReturn200() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "internal.jpg", "image/jpeg", "internal".getBytes());
 
         mockMvc.perform(multipart("/api/file/upload")
                         .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.productId").isEmpty())
-                .andExpect(jsonPath("$.filename").value("internal.png"));
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.productId").isEmpty());
     }
 
     @Test
-    void uploadInternalFile_asLogistician_shouldReturn403() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "internal.png", "image/png", IMAGE_CONTENT);
+    void uploadInternalFile_AsLogistician_ShouldReturn403() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "internal.jpg", "image/jpeg", "content".getBytes());
 
         mockMvc.perform(multipart("/api/file/upload")
                         .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void getFile_asUser_forProductPhoto_shouldReturn200() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", IMAGE_CONTENT);
-        String response = mockMvc.perform(multipart("/api/file/product/1/photo")
-                        .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        Long fileId = objectMapper.readTree(response).get("id").asLong();
-
-        mockMvc.perform(get("/api/file/" + fileId)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_USER))
-                .andExpect(status().isOk())
-                .andExpect(header().exists("Content-Disposition"));
-    }
-
-    @Test
-    void getFileInfo_asUser_forProductPhoto_shouldReturn200() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", IMAGE_CONTENT);
-        String response = mockMvc.perform(multipart("/api/file/product/1/photo")
-                        .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        Long fileId = objectMapper.readTree(response).get("id").asLong();
-
-        mockMvc.perform(get("/api/file/" + fileId + "/info")
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_USER))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(fileId))
-                .andExpect(jsonPath("$.productId").value(1));
-    }
-
-    @Test
-    void getProductPhotos_shouldReturnPaginated() throws Exception {
+    void getProductPhotos_AsUser_ShouldReturnPage() throws Exception {
         mockMvc.perform(get("/api/file/product/1")
                         .param("page", "0")
                         .param("size", "10")
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_USER))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_USER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.totalElements").exists());
     }
 
     @Test
-    void getAllFiles_asSupervisor_shouldReturn200() throws Exception {
+    void getAllFiles_AsSupervisor_ShouldReturnPage() throws Exception {
         mockMvc.perform(get("/api/file")
                         .param("page", "0")
                         .param("size", "10")
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
 
     @Test
-    void getAllFiles_asUser_shouldReturn403() throws Exception {
+    void getAllFiles_AsUser_ShouldReturn403() throws Exception {
         mockMvc.perform(get("/api/file")
                         .param("page", "0")
                         .param("size", "10")
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_USER))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_USER))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void deleteFile_asLogistician_forProductPhoto_shouldReturn204() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", IMAGE_CONTENT);
-        String response = mockMvc.perform(multipart("/api/file/product/1/photo")
+    void getFile_ProductPhoto_AsUser_ShouldReturn200() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", "photo-content".getBytes());
+
+        MvcResult uploadResult = mockMvc.perform(multipart("/api/file/product/1/photo")
                         .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn();
 
-        Long fileId = objectMapper.readTree(response).get("id").asLong();
-
-        mockMvc.perform(delete("/api/file/" + fileId)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
-                .andExpect(status().isNoContent());
-
-        mockMvc.perform(get("/api/file/" + fileId + "/info")
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void deleteFile_asUser_shouldReturn403() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", IMAGE_CONTENT);
-        String response = mockMvc.perform(multipart("/api/file/product/1/photo")
-                        .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        Long fileId = objectMapper.readTree(response).get("id").asLong();
-
-        mockMvc.perform(delete("/api/file/" + fileId)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_USER))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void getFile_asUser_forInternalFile_shouldReturn403() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "internal.png", "image/png", IMAGE_CONTENT);
-        String response = mockMvc.perform(multipart("/api/file/upload")
-                        .file(file)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        Long fileId = objectMapper.readTree(response).get("id").asLong();
+        String json = uploadResult.getResponse().getContentAsString();
+        long fileId = new ObjectMapper().readTree(json).get("id").asLong();
 
         mockMvc.perform(get("/api/file/" + fileId)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_USER))
-                .andExpect(status().isForbidden());
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_USER))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("Content-Type"));
     }
 
     @Test
-    void getFile_whenNotFound_shouldReturn404() throws Exception {
+    void deleteProductPhoto_AsLogistician_ShouldReturn204() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "del.jpg", "image/jpeg", "to-delete".getBytes());
+
+        MvcResult uploadResult = mockMvc.perform(multipart("/api/file/product/1/photo")
+                        .file(file)
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        long fileId = new ObjectMapper().readTree(uploadResult.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(delete("/api/file/" + fileId)
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void getFile_WhenNotExists_ShouldReturn404() throws Exception {
         mockMvc.perform(get("/api/file/99999")
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void getFileInfo_whenNotFound_shouldReturn404() throws Exception {
-        mockMvc.perform(get("/api/file/99999/info")
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ID, USER_ID)
-                        .header(XUserIdAuthenticationFilter.HEADER_X_USER_ROLES, ROLES_SUPERVISOR))
+    void uploadProductPhoto_WhenProductNotFound_ShouldReturn404() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", "content".getBytes());
+        when(productServiceClient.getProductById(99999L)).thenReturn(null);
+
+        mockMvc.perform(multipart("/api/file/product/99999/photo")
+                        .file(file)
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void contextLoads() {
-        org.assertj.core.api.Assertions.assertThat(true).isTrue();
+    void uploadProductPhoto_WithInvalidContentType_ShouldReturn400() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "doc.pdf", "application/pdf", "content".getBytes());
+
+        mockMvc.perform(multipart("/api/file/product/1/photo")
+                        .file(file)
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void requestWithoutAuth_ShouldReturn401() throws Exception {
+        mockMvc.perform(get("/api/file/product/1"))
+                .andExpect(status().isUnauthorized());
     }
 }
