@@ -1,8 +1,37 @@
+server:
+  port: 8086
+
 spring:
-  datasource:
+  application:
+    name: file-service
+  r2dbc:
     url: jdbc:postgresql://postgres-file:5432/file_db
     username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:root}
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    url: jdbc:postgresql://postgres-file:5432/file_db
+    user: ${DB_USERNAME:admin}
     password: ${DB_PASSWORD:root}
 
 file:
   storage-path: /app/files
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+feign:
+  circuitbreaker:
+    enabled: true
+
