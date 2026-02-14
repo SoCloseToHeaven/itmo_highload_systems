@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-file:5432/file_db
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:root}
+
+file:
+  storage-path: /app/files
