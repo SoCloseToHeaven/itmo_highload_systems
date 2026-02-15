@@ -1,4 +1,4 @@
-package ru.ifmo.highload.order.messaging;
+package ru.ifmo.highload.order.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

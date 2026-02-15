@@ -15,13 +15,9 @@ import ru.ifmo.highload.order.dto.order.OrderCreateRequest;
 import ru.ifmo.highload.order.dto.order.OrderResponse;
 import ru.ifmo.highload.order.dto.order.OrderStatus;
 
-/**
- * Order management API.
- */
 @Tag(name = "Order Management", description = "API for managing orders")
 public interface OrderApi {
 
-    /** Creates a new order. */
     @Operation(summary = "Create order", description = "Create a new order with transaction support")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Order successfully created"),
@@ -34,7 +30,6 @@ public interface OrderApi {
     Mono<ResponseEntity<OrderResponse>> createOrder(
             @Parameter(description = "Order creation data")             @Valid @RequestBody OrderCreateRequest request);
 
-    /** Returns order by ID. */
     @Operation(summary = "Get order by ID", description = "Get detailed order information by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order successfully retrieved"),
@@ -46,7 +41,6 @@ public interface OrderApi {
     Mono<ResponseEntity<OrderResponse>> getOrder(
             @Parameter(description = "Order ID")             @PathVariable Long orderId);
 
-    /** Updates order status. */
     @Operation(summary = "Update order status", description = "Update order status (cancellation, completion, etc.) with transaction support")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Order status successfully updated"),
@@ -60,7 +54,6 @@ public interface OrderApi {
             @Parameter(description = "Order ID to update") @PathVariable Long orderId,
             @Parameter(description = "New order status")             @RequestBody OrderStatus status);
 
-    /** Returns orders for a user (administrators). */
     @Operation(summary = "Get user orders", description = "Get paginated list of orders for a specific user (for administrators/support)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User orders successfully retrieved"),
@@ -77,7 +70,6 @@ public interface OrderApi {
                       "sort": "string"
                     }""")             Pageable pageable);
 
-    /** Returns orders for the current user. */
     @Operation(summary = "Get my orders", description = "Get paginated list of orders for the current user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User orders successfully retrieved"),
@@ -93,7 +85,6 @@ public interface OrderApi {
                       "sort": "string"
                     }""")             Pageable pageable);
 
-    /** Returns all orders with pagination. */
     @Operation(summary = "Get all orders", description = "Get paginated list of all orders")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Orders successfully retrieved"),

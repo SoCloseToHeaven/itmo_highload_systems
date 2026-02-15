@@ -9,9 +9,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
-/**
- * Redirects /swagger-ui.html to /swagger-ui/index.html for WebFlux compatibility with springdoc.
- */
 @Configuration
 public class SwaggerRedirectConfig {
 

@@ -8,15 +8,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import ru.ifmo.highload.order.api.OrderService;
-import ru.ifmo.highload.order.client.PriceServiceClient;
-import ru.ifmo.highload.order.client.ProductServiceClient;
+import ru.ifmo.highload.order.api.PriceDataService;
+import ru.ifmo.highload.order.api.ProductDataService;
+import ru.ifmo.highload.order.api.OrderEventService;
 import ru.ifmo.highload.order.dto.external.product.ProductResponse;
 import ru.ifmo.highload.order.dto.external.product.ProductUpdateRequest;
 import ru.ifmo.highload.order.dto.order.*;
 import ru.ifmo.highload.order.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.order.impl.exceptions.ResourceNotFoundException;
-import ru.ifmo.highload.order.messaging.OrderCreatedEvent;
 import ru.ifmo.highload.order.messaging.OrderEventProducer;
+import ru.ifmo.highload.order.model.OrderCreatedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +29,9 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
-    private final ProductServiceClient productServiceClient;
-    private final PriceServiceClient priceServiceClient;
-    private final OrderEventProducer orderEventProducer;
+    private final ProductDataService productDataService;
+    private final PriceDataService priceDataService;
+    private final OrderEventService orderEventService;
 
     @Override
     public Mono<OrderResponse> createOrder(OrderCreateRequest request, Long userId) {
@@ -55,13 +56,13 @@ public class OrderServiceImpl implements OrderService {
         int totalSum = 0;
 
         for (OrderItemRequest item : request.getItems()) {
-            ProductResponse productResponse = productServiceClient.getProductById(item.getProductId());
+            ProductResponse productResponse = productDataService.getProductById(item.getProductId());
 
             if (productResponse.getStockQuantity() < item.getQuantity()) {
                 throw new BadRequestException("Недостаточный сток для продукта: " + productResponse.getName());
             }
 
-            Integer currentPrice = priceServiceClient.getCurrentPriceForProduct(item.getProductId());
+            Integer currentPrice = priceDataService.getCurrentPriceForProduct(item.getProductId());
             int itemTotal = currentPrice * item.getQuantity();
             totalSum += itemTotal;
 
@@ -78,7 +79,7 @@ public class OrderServiceImpl implements OrderService {
             updateRequest.setDescription(productResponse.getDescription());
             updateRequest.setStockQuantity(productResponse.getStockQuantity() - item.getQuantity());
 
-            productServiceClient.updateProduct(item.getProductId(), updateRequest);
+            productDataService.updateProduct(item.getProductId(), updateRequest);
         }
 
         orderProductRepository.saveAll(orderProducts);
@@ -93,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
                 orderProducts.stream()
                         .map(op -> new OrderEventProducer.OrderProductInfo(op.getProductId(), op.getQuantity(), op.getPurchasePrice()))
                         .collect(Collectors.toList()));
-        orderEventProducer.publishOrderCreated(event);
+        orderEventService.publishOrderCreated(event);
 
         return toOrderResponse(finalOrder);
     }
@@ -155,7 +156,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderItemResponse> items = orderProducts.stream()
                 .map(op -> {
-                    ProductResponse product = productServiceClient.getProductById(op.getProductId());
+                    ProductResponse product = productDataService.getProductById(op.getProductId());
 
                     OrderItemResponse itemResponse = new OrderItemResponse();
                     itemResponse.setProductId(op.getProductId());

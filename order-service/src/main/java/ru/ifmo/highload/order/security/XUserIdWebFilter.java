@@ -17,9 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Auth via X-User-Id and X-User-Roles headers (set by Gateway). Forwards them to Feign via ExchangeHolder.
- */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class XUserIdWebFilter implements WebFilter {

@@ -1,18 +1,19 @@
 package ru.ifmo.highload.order.messaging;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import ru.ifmo.highload.order.api.OrderEventService;
 import ru.ifmo.highload.order.config.RabbitMQConfig;
+import ru.ifmo.highload.order.model.OrderCreatedEvent;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class OrderEventProducer {
+public class OrderEventProducer implements OrderEventService {
 
     private static final String TOPIC_ORDER_EVENTS = "order.events";
     private static final String ROUTING_KEY_ORDER_CREATED = "order.created";

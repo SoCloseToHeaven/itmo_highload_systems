@@ -2,7 +2,6 @@ package ru.ifmo.highload.order.dto.external.product;
 
 import lombok.Data;
 
-/** Product DTO (mirrors product-service). Sync when product-service DTO changes. */
 @Data
 public class ProductResponse {
     private Long id;
