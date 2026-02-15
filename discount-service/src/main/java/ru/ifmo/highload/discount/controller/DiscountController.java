@@ -49,5 +49,7 @@ public class DiscountController implements DiscountApi {
     public ResponseEntity<Page<DiscountResponse>> getAllDiscounts(Pageable pageable) {
         return ResponseEntity.ok(discountService.getAllDiscounts(pageable));
     }
+
+
 }
 

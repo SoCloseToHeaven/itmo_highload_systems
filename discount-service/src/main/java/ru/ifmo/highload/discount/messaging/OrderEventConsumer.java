@@ -10,7 +10,7 @@ public class OrderEventConsumer {
 
     @KafkaListener(topics = "order.events", groupId = "discount-service", containerFactory = "orderEventKafkaListenerContainerFactory")
     public void consumeOrderCreated(OrderCreatedEvent event) {
-        log.info("Received OrderCreatedEvent: orderId={}, userId={}, totalSum={}",
+        log.info("Kafka: Received OrderCreatedEvent: orderId={}, userId={}, totalSum={}",
                 event.getOrderId(), event.getUserId(), event.getTotalSum());
     }
 }

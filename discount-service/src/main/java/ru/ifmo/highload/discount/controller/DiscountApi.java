@@ -83,4 +83,5 @@ public interface DiscountApi {
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
+
 }

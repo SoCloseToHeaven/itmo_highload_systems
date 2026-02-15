@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.product.dto.product.ProductResponse;
 import ru.ifmo.highload.product.dto.product.ProductUpdateRequest;
+import ru.ifmo.highload.product.dto.stats.ProductPurchaseStatsResponse;
+
+import java.util.List;
 
 /**
  * Product management API.
@@ -86,4 +89,12 @@ public interface ProductApi {
                       "size": 1,
                       "sort": "string"
                     }""") Pageable pageable);
+
+    /** Returns product purchase statistics. */
+    @Operation(summary = "Get product purchase stats", description = "Get purchase statistics per product (from order events)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Stats successfully retrieved")
+    })
+    @GetMapping("/stats/purchases")
+    ResponseEntity<List<ProductPurchaseStatsResponse>> getProductPurchaseStats();
 }
