@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import ru.ifmo.highload.order.client.PriceServiceClient;
 import ru.ifmo.highload.order.client.ProductServiceClient;
+import ru.ifmo.highload.order.messaging.OrderEventProducer;
 import ru.ifmo.highload.order.dto.external.product.ProductResponse;
 import ru.ifmo.highload.order.dto.order.*;
 import ru.ifmo.highload.order.impl.exceptions.BadRequestException;
@@ -39,6 +40,9 @@ class OrderServiceImplTest {
 
     @Mock
     private PriceServiceClient priceServiceClient;
+
+    @Mock
+    private OrderEventProducer orderEventProducer;
 
     @InjectMocks
     private OrderServiceImpl orderService;

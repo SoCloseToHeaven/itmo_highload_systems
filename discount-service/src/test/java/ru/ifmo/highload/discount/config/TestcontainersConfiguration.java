@@ -5,8 +5,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 import ru.ifmo.highload.discount.client.PriceServiceClient;
 import ru.ifmo.highload.discount.client.ProductServiceClient;
 import ru.ifmo.highload.discount.dto.external.price.PriceResponse;
@@ -38,6 +40,12 @@ public abstract class TestcontainersConfiguration {
             .withUsername("test")
             .withPassword("test");
 
+    @Container
+    static KafkaContainer kafka = new KafkaContainer("apache/kafka:3.8.0");
+
+    @Container
+    static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:3.13-management");
+
     @MockBean
     protected ProductServiceClient productServiceClient;
 
@@ -65,6 +73,9 @@ public abstract class TestcontainersConfiguration {
         registry.add("eureka.client.enabled", () -> "false");
         registry.add("eureka.client.register-with-eureka", () -> "false");
         registry.add("eureka.client.fetch-registry", () -> "false");
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.rabbitmq.host", rabbitmq::getHost);
+        registry.add("spring.rabbitmq.port", rabbitmq::getAmqpPort);
     }
 
     protected void setupMockClients() {

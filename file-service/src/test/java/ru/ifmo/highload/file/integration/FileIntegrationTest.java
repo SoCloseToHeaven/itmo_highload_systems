@@ -193,8 +193,36 @@ class FileIntegrationTest extends TestcontainersConfiguration {
     }
 
     @Test
-    void requestWithoutAuth_ShouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/file/product/1"))
+    void getProductPhotos_WithoutAuth_ShouldReturn200() throws Exception {
+        mockMvc.perform(get("/api/file/product/1")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").exists());
+    }
+
+    @Test
+    void getProductPhoto_WithoutAuth_ShouldReturn200() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "public.jpg", "image/jpeg", "public-content".getBytes());
+        MvcResult uploadResult = mockMvc.perform(multipart("/api/file/product/1/photo")
+                        .file(file)
+                        .header(HEADER_X_USER_ID, USER_ID)
+                        .header(HEADER_X_USER_ROLES, ROLES_LOGISTICIAN))
+                .andExpect(status().isOk())
+                .andReturn();
+        long fileId = new ObjectMapper().readTree(uploadResult.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(get("/api/file/" + fileId))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("Content-Type"));
+    }
+
+    @Test
+    void getAllFiles_WithoutAuth_ShouldReturn401() throws Exception {
+        mockMvc.perform(get("/api/file")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(status().isUnauthorized());
     }
 }

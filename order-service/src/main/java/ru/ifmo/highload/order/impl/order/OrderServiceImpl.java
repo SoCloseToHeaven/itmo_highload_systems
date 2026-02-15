@@ -15,6 +15,8 @@ import ru.ifmo.highload.order.dto.external.product.ProductUpdateRequest;
 import ru.ifmo.highload.order.dto.order.*;
 import ru.ifmo.highload.order.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.order.impl.exceptions.ResourceNotFoundException;
+import ru.ifmo.highload.order.messaging.OrderCreatedEvent;
+import ru.ifmo.highload.order.messaging.OrderEventProducer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderProductRepository orderProductRepository;
     private final ProductServiceClient productServiceClient;
     private final PriceServiceClient priceServiceClient;
+    private final OrderEventProducer orderEventProducer;
 
     @Override
     public Mono<OrderResponse> createOrder(OrderCreateRequest request, Long userId) {
@@ -82,6 +85,15 @@ public class OrderServiceImpl implements OrderService {
 
         savedOrder.setTotalSum(totalSum);
         Order finalOrder = orderRepository.save(savedOrder);
+
+        OrderCreatedEvent event = OrderEventProducer.from(
+                finalOrder.getId(),
+                userId,
+                totalSum,
+                orderProducts.stream()
+                        .map(op -> new OrderEventProducer.OrderProductInfo(op.getProductId(), op.getQuantity(), op.getPurchasePrice()))
+                        .collect(Collectors.toList()));
+        orderEventProducer.publishOrderCreated(event);
 
         return toOrderResponse(finalOrder);
     }
