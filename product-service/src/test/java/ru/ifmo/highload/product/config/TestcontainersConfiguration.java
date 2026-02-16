@@ -6,6 +6,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -30,6 +31,9 @@ public abstract class TestcontainersConfiguration {
             .withUsername("test")
             .withPassword("test");
 
+    @Container
+    static KafkaContainer kafka = new KafkaContainer("apache/kafka:3.8.0");
+
     static {
         postgres.start();
     }
@@ -51,6 +55,7 @@ public abstract class TestcontainersConfiguration {
         registry.add("eureka.client.enabled", () -> "false");
         registry.add("eureka.client.register-with-eureka", () -> "false");
         registry.add("eureka.client.fetch-registry", () -> "false");
+        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     }
 }
 

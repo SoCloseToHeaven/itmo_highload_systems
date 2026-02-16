@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import ru.ifmo.highload.price.api.PriceService;
 import ru.ifmo.highload.price.client.ProductServiceClient;
 import ru.ifmo.highload.price.dto.actual_price.PriceCreateRequest;
@@ -27,6 +28,7 @@ public class PriceServiceImpl implements PriceService {
     @Override
     public Mono<PriceResponse> createPrice(PriceCreateRequest request) {
         return Mono.fromCallable(() -> productServiceClient.getProductById(request.getProductId()))
+                .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(product -> actualPriceRepository.countByProductId(request.getProductId())
                         .flatMap(count -> {
                             if (count > 0) {

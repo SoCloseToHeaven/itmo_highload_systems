@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.ifmo.highload.product.api.ProductService;
 import ru.ifmo.highload.product.dto.product.ProductResponse;
 import ru.ifmo.highload.product.dto.product.ProductUpdateRequest;
+import ru.ifmo.highload.product.dto.stats.ProductPurchaseStatsResponse;
+import ru.ifmo.highload.product.impl.stats.ProductPurchaseStatsService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/product")
@@ -16,6 +20,7 @@ import ru.ifmo.highload.product.dto.product.ProductUpdateRequest;
 public class ProductController implements ProductApi {
 
     private final ProductService productService;
+    private final ProductPurchaseStatsService productPurchaseStatsService;
 
     @Override
     public ResponseEntity<Page<ProductResponse>> getProductsByCategory(Long categoryId, Pageable pageable) {
@@ -41,6 +46,11 @@ public class ProductController implements ProductApi {
     @Override
     public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
         return ResponseEntity.ok(productService.getAllCategories(pageable));
+    }
+
+    @Override
+    public ResponseEntity<List<ProductPurchaseStatsResponse>> getProductPurchaseStats() {
+        return ResponseEntity.ok(productPurchaseStatsService.getAllStats());
     }
 }
 

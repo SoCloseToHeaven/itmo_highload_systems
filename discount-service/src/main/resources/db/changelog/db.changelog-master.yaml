@@ -1,4 +1,8 @@
 databaseChangeLog:
   - include:
       file: db/changelog/sql/db.changelog-1.0.0_initialize_tables.sql
+  - include:
+      file: db/changelog/sql/db.changelog-1.1.0_product_purchase_stats.sql
+  - include:
+      file: db/changelog/sql/db.changelog-1.2.0_drop_product_purchase_stats.sql
 

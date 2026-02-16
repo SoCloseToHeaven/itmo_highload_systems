@@ -11,8 +11,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import ru.ifmo.highload.order.client.PriceServiceClient;
-import ru.ifmo.highload.order.client.ProductServiceClient;
+import ru.ifmo.highload.order.api.OrderEventService;
+import ru.ifmo.highload.order.api.PriceDataService;
+import ru.ifmo.highload.order.api.ProductDataService;
 import ru.ifmo.highload.order.dto.external.product.ProductResponse;
 import ru.ifmo.highload.order.dto.order.*;
 import ru.ifmo.highload.order.impl.exceptions.BadRequestException;
@@ -35,10 +36,13 @@ class OrderServiceImplTest {
     private OrderProductRepository orderProductRepository;
 
     @Mock
-    private ProductServiceClient productServiceClient;
+    private ProductDataService productDataService;
 
     @Mock
-    private PriceServiceClient priceServiceClient;
+    private PriceDataService priceDataService;
+
+    @Mock
+    private OrderEventService orderEventService;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -57,9 +61,9 @@ class OrderServiceImplTest {
         product1.setName("HQD Crystal Plus");
         product1.setStockQuantity(10);
 
-        when(priceServiceClient.getCurrentPriceForProduct(1L)).thenReturn(45000);
-        when(productServiceClient.getProductById(1L)).thenReturn(product1);
-        when(productServiceClient.updateProduct(anyLong(), any())).thenReturn(product1);
+        when(priceDataService.getCurrentPriceForProduct(1L)).thenReturn(45000);
+        when(productDataService.getProductById(1L)).thenReturn(product1);
+        when(productDataService.updateProduct(anyLong(), any())).thenReturn(product1);
 
         Order savedOrder = new Order();
         savedOrder.setId(1L);
@@ -118,7 +122,7 @@ class OrderServiceImplTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderProductRepository.findByOrderId(orderId)).thenReturn(List.of(orderProduct));
-        when(productServiceClient.getProductById(1L)).thenReturn(product);
+        when(productDataService.getProductById(1L)).thenReturn(product);
 
         StepVerifier.create(orderService.getOrderById(orderId))
                 .assertNext(result -> {
@@ -196,11 +200,11 @@ class OrderServiceImplTest {
         product2.setStockQuantity(5);
         product2.setDescription("Description 2");
 
-        when(priceServiceClient.getCurrentPriceForProduct(1L)).thenReturn(45000);
-        when(priceServiceClient.getCurrentPriceForProduct(2L)).thenReturn(50000);
-        when(productServiceClient.getProductById(1L)).thenReturn(product1);
-        when(productServiceClient.getProductById(2L)).thenReturn(product2);
-        when(productServiceClient.updateProduct(anyLong(), any())).thenReturn(product1, product2);
+        when(priceDataService.getCurrentPriceForProduct(1L)).thenReturn(45000);
+        when(priceDataService.getCurrentPriceForProduct(2L)).thenReturn(50000);
+        when(productDataService.getProductById(1L)).thenReturn(product1);
+        when(productDataService.getProductById(2L)).thenReturn(product2);
+        when(productDataService.updateProduct(anyLong(), any())).thenReturn(product1, product2);
 
         Order savedOrder = new Order();
         savedOrder.setId(1L);
@@ -239,7 +243,7 @@ class OrderServiceImplTest {
         initialOrder.setStatus(OrderStatus.PENDING);
 
         when(orderRepository.save(any(Order.class))).thenReturn(initialOrder);
-        when(productServiceClient.getProductById(999L))
+        when(productDataService.getProductById(999L))
                 .thenThrow(new RuntimeException("Product not found"));
 
         StepVerifier.create(orderService.createOrder(request, 1L))
@@ -270,8 +274,8 @@ class OrderServiceImplTest {
         initialOrder.setStatus(OrderStatus.PENDING);
 
         when(orderRepository.save(any(Order.class))).thenReturn(initialOrder);
-        when(productServiceClient.getProductById(1L)).thenReturn(product);
-        when(priceServiceClient.getCurrentPriceForProduct(1L))
+        when(productDataService.getProductById(1L)).thenReturn(product);
+        when(priceDataService.getCurrentPriceForProduct(1L))
                 .thenThrow(new RuntimeException("Price not found"));
 
         StepVerifier.create(orderService.createOrder(request, 1L))
@@ -302,7 +306,7 @@ class OrderServiceImplTest {
         initialOrder.setStatus(OrderStatus.PENDING);
 
         when(orderRepository.save(any(Order.class))).thenReturn(initialOrder);
-        when(productServiceClient.getProductById(1L)).thenReturn(product);
+        when(productDataService.getProductById(1L)).thenReturn(product);
 
         StepVerifier.create(orderService.createOrder(request, 1L))
                 .expectError(BadRequestException.class)
@@ -354,8 +358,8 @@ class OrderServiceImplTest {
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
         when(orderProductRepository.findByOrderId(orderId)).thenReturn(List.of(orderProduct1, orderProduct2));
-        when(productServiceClient.getProductById(1L)).thenReturn(product1);
-        when(productServiceClient.getProductById(2L)).thenReturn(product2);
+        when(productDataService.getProductById(1L)).thenReturn(product1);
+        when(productDataService.getProductById(2L)).thenReturn(product2);
 
         StepVerifier.create(orderService.getOrderById(orderId))
                 .assertNext(result -> {

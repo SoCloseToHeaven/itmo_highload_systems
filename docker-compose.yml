@@ -97,6 +97,132 @@ services:
     networks:
       - microservices-net
 
+  postgres-file:
+    image: postgres:15.5
+    container_name: postgres-file
+    environment:
+      POSTGRES_DB: file_db
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres-file-data:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - microservices-net
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  kafka-1:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-1
+    depends_on:
+      - zookeeper
+    ports:
+      - "19092:19092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:19092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_HEAP_OPTS: "-Xmx384m -Xms256m"
+    networks:
+      - microservices-net
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  kafka-2:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-2
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_HEAP_OPTS: "-Xmx384m -Xms256m"
+    networks:
+      - microservices-net
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  kafka-3:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-3
+    depends_on:
+      - zookeeper
+    ports:
+      - "39092:39092"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:39092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_HEAP_OPTS: "-Xmx384m -Xms256m"
+    networks:
+      - microservices-net
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - microservices-net
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-init
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    networks:
+      - microservices-net
+    command: >
+      bash -c "
+        kafka-topics --bootstrap-server kafka-1:19092,kafka-2:29092,kafka-3:39092 --create --if-not-exists --topic order.events --partitions 3 --replication-factor 3 --config min.insync.replicas=2 &&
+        kafka-topics --bootstrap-server kafka-1:19092,kafka-2:29092,kafka-3:39092 --create --if-not-exists --topic product.events --partitions 3 --replication-factor 3 --config min.insync.replicas=2 &&
+        kafka-topics --bootstrap-server kafka-1:19092,kafka-2:29092,kafka-3:39092 --create --if-not-exists --topic notification.events --partitions 3 --replication-factor 3 --config min.insync.replicas=2 &&
+        echo 'Kafka topics created'
+      "
+    restart: "no"
+
   # Microservices
   auth-service:
     build: ./auth-service
@@ -126,6 +252,8 @@ services:
       - eureka-server
       - config-server
       - postgres-product
+      - kafka-1
+      - rabbitmq
     networks:
       - microservices-net
     environment:
@@ -133,6 +261,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-root}
       - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka-1:19092,kafka-2:29092,kafka-3:39092
+      - SPRING_RABBITMQ_HOST=rabbitmq
     volumes:
       - gradle-cache:/root/.gradle
 
@@ -166,6 +296,8 @@ services:
       - postgres-discount
       - product-service
       - price-service
+      - kafka-1
+      - rabbitmq
     networks:
       - microservices-net
     environment:
@@ -173,6 +305,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-root}
       - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka-1:19092,kafka-2:29092,kafka-3:39092
+      - SPRING_RABBITMQ_HOST=rabbitmq
     volumes:
       - gradle-cache:/root/.gradle
 
@@ -187,6 +321,30 @@ services:
       - postgres-order
       - product-service
       - price-service
+      - kafka-1
+      - rabbitmq
+    networks:
+      - microservices-net
+    environment:
+      - DB_USERNAME=${DB_USERNAME:-admin}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka-1:19092,kafka-2:29092,kafka-3:39092
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    volumes:
+      - gradle-cache:/root/.gradle
+
+  file-service:
+    build: ./file-service
+    container_name: file-service
+    ports:
+      - "8086:8086"
+    depends_on:
+      - eureka-server
+      - config-server
+      - postgres-file
+      - product-service
     networks:
       - microservices-net
     environment:
@@ -195,6 +353,7 @@ services:
       - JWT_SECRET=${JWT_SECRET:-itmo-highload-auth-secret-key-min-32-chars}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
     volumes:
+      - file-storage:/app/files
       - gradle-cache:/root/.gradle
 
   # API Gateway
@@ -211,6 +370,7 @@ services:
       - price-service
       - discount-service
       - order-service
+      - file-service
     networks:
       - microservices-net
     environment:
@@ -228,4 +388,6 @@ volumes:
   postgres-discount-data:
   postgres-order-data:
   postgres-auth-data:
-  gradle-cache:  # Общий кэш для Gradle зависимостей всех сервисов
+  postgres-file-data:
+  file-storage:
+  gradle-cache:

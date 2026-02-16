@@ -7,14 +7,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import ru.ifmo.highload.order.api.OrderService;
-import ru.ifmo.highload.order.client.PriceServiceClient;
-import ru.ifmo.highload.order.client.ProductServiceClient;
+import ru.ifmo.highload.order.api.PriceDataService;
+import ru.ifmo.highload.order.api.ProductDataService;
+import ru.ifmo.highload.order.api.OrderEventService;
 import ru.ifmo.highload.order.dto.external.product.ProductResponse;
 import ru.ifmo.highload.order.dto.external.product.ProductUpdateRequest;
 import ru.ifmo.highload.order.dto.order.*;
 import ru.ifmo.highload.order.impl.exceptions.BadRequestException;
 import ru.ifmo.highload.order.impl.exceptions.ResourceNotFoundException;
+import ru.ifmo.highload.order.messaging.OrderEventProducer;
+import ru.ifmo.highload.order.model.OrderCreatedEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +30,14 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
-    private final ProductServiceClient productServiceClient;
-    private final PriceServiceClient priceServiceClient;
+    private final ProductDataService productDataService;
+    private final PriceDataService priceDataService;
+    private final OrderEventService orderEventService;
 
     @Override
     public Mono<OrderResponse> createOrder(OrderCreateRequest request, Long userId) {
         return Mono.fromCallable(() -> createOrderBlocking(request, userId))
-                .flatMap(Mono::just);
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional
@@ -52,13 +57,13 @@ public class OrderServiceImpl implements OrderService {
         int totalSum = 0;
 
         for (OrderItemRequest item : request.getItems()) {
-            ProductResponse productResponse = productServiceClient.getProductById(item.getProductId());
+            ProductResponse productResponse = productDataService.getProductById(item.getProductId());
 
             if (productResponse.getStockQuantity() < item.getQuantity()) {
                 throw new BadRequestException("Недостаточный сток для продукта: " + productResponse.getName());
             }
 
-            Integer currentPrice = priceServiceClient.getCurrentPriceForProduct(item.getProductId());
+            Integer currentPrice = priceDataService.getCurrentPriceForProduct(item.getProductId());
             int itemTotal = currentPrice * item.getQuantity();
             totalSum += itemTotal;
 
@@ -75,13 +80,22 @@ public class OrderServiceImpl implements OrderService {
             updateRequest.setDescription(productResponse.getDescription());
             updateRequest.setStockQuantity(productResponse.getStockQuantity() - item.getQuantity());
 
-            productServiceClient.updateProduct(item.getProductId(), updateRequest);
+            productDataService.updateProduct(item.getProductId(), updateRequest);
         }
 
         orderProductRepository.saveAll(orderProducts);
 
         savedOrder.setTotalSum(totalSum);
         Order finalOrder = orderRepository.save(savedOrder);
+
+        OrderCreatedEvent event = OrderEventProducer.from(
+                finalOrder.getId(),
+                userId,
+                totalSum,
+                orderProducts.stream()
+                        .map(op -> new OrderEventProducer.OrderProductInfo(op.getProductId(), op.getQuantity(), op.getPurchasePrice()))
+                        .collect(Collectors.toList()));
+        orderEventService.publishOrderCreated(event);
 
         return toOrderResponse(finalOrder);
     }
@@ -92,12 +106,13 @@ public class OrderServiceImpl implements OrderService {
             Order order = orderRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Не найден заказ с id: " + id));
             return toOrderResponse(order);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<OrderResponse> updateOrderStatus(Long id, OrderStatus status) {
-        return Mono.fromCallable(() -> updateOrderStatusBlocking(id, status));
+        return Mono.fromCallable(() -> updateOrderStatusBlocking(id, status))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional
@@ -119,7 +134,7 @@ public class OrderServiceImpl implements OrderService {
         return Mono.fromCallable(() -> {
             Page<Order> orders = orderRepository.findByUserId(userId, pageable);
             return orders.map(this::toOrderResponse);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -127,7 +142,7 @@ public class OrderServiceImpl implements OrderService {
         return Mono.fromCallable(() -> {
             Page<Order> orders = orderRepository.findByUserId(userId, pageable);
             return orders.map(this::toOrderResponse);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -135,7 +150,7 @@ public class OrderServiceImpl implements OrderService {
         return Mono.fromCallable(() -> {
             Page<Order> orders = orderRepository.findAll(pageable);
             return orders.map(this::toOrderResponse);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     private OrderResponse toOrderResponse(Order order) {
@@ -143,7 +158,7 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderItemResponse> items = orderProducts.stream()
                 .map(op -> {
-                    ProductResponse product = productServiceClient.getProductById(op.getProductId());
+                    ProductResponse product = productDataService.getProductById(op.getProductId());
 
                     OrderItemResponse itemResponse = new OrderItemResponse();
                     itemResponse.setProductId(op.getProductId());
