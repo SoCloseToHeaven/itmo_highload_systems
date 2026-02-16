@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import ru.ifmo.highload.order.api.OrderService;
 import ru.ifmo.highload.order.api.PriceDataService;
 import ru.ifmo.highload.order.api.ProductDataService;
@@ -36,7 +37,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Mono<OrderResponse> createOrder(OrderCreateRequest request, Long userId) {
         return Mono.fromCallable(() -> createOrderBlocking(request, userId))
-                .flatMap(Mono::just);
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional
@@ -105,12 +106,13 @@ public class OrderServiceImpl implements OrderService {
             Order order = orderRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Не найден заказ с id: " + id));
             return toOrderResponse(order);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<OrderResponse> updateOrderStatus(Long id, OrderStatus status) {
-        return Mono.fromCallable(() -> updateOrderStatusBlocking(id, status));
+        return Mono.fromCallable(() -> updateOrderStatusBlocking(id, status))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional
@@ -132,7 +134,7 @@ public class OrderServiceImpl implements OrderService {
         return Mono.fromCallable(() -> {
             Page<Order> orders = orderRepository.findByUserId(userId, pageable);
             return orders.map(this::toOrderResponse);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -140,7 +142,7 @@ public class OrderServiceImpl implements OrderService {
         return Mono.fromCallable(() -> {
             Page<Order> orders = orderRepository.findByUserId(userId, pageable);
             return orders.map(this::toOrderResponse);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -148,7 +150,7 @@ public class OrderServiceImpl implements OrderService {
         return Mono.fromCallable(() -> {
             Page<Order> orders = orderRepository.findAll(pageable);
             return orders.map(this::toOrderResponse);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     private OrderResponse toOrderResponse(Order order) {
