@@ -20,7 +20,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("File Service API")
-                        .description("Product photos and file storage. Upload product photos: LOGISTICIAN, SUPERVISOR. Upload internal files: SUPERVISOR only. Read product photos: any authenticated user. Read internal files / list all: SUPERVISOR only.")
+                        .description("Product photos and file storage. Upload product photos: LOGISTICIAN, SUPERVISOR. Upload internal files: SUPERVISOR only. Read product photos: any user. Read internal files / list all: SUPERVISOR only.")
                         .version("1.0"))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
                 .addSecurityItem(new SecurityRequirement()

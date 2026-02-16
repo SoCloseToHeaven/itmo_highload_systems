@@ -43,7 +43,7 @@ public interface FileApi {
             @Parameter(description = "Image file") @RequestParam("file") MultipartFile file,
             Authentication authentication);
 
-    @Operation(summary = "Get file content", description = "Download file. Product photos: any authenticated user. Internal files: SUPERVISOR only.")
+    @Operation(summary = "Get file content", description = "Download file. Product photos: any user. Internal files: SUPERVISOR only.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "File content"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -65,7 +65,7 @@ public interface FileApi {
     ResponseEntity<FileInfo> getFileInfo(
             @Parameter(description = "File ID") @PathVariable Long id);
 
-    @Operation(summary = "List product photos", description = "Get paginated list of photos for a product. Any authenticated user.")
+    @Operation(summary = "List product photos", description = "Get paginated list of photos for a product. Any user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product photos"),
             @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -73,7 +73,12 @@ public interface FileApi {
     @GetMapping("/product/{productId}")
     ResponseEntity<Page<FileInfo>> getProductPhotos(
             @Parameter(description = "Product ID") @PathVariable Long productId,
-            @Parameter(description = "Pagination") Pageable pageable);
+            @Parameter(description = "Pagination parameters", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""")             Pageable pageable);
 
     @Operation(summary = "List all files", description = "Get paginated list of all files. Requires SUPERVISOR only.")
     @ApiResponses(value = {
@@ -83,7 +88,12 @@ public interface FileApi {
     })
     @GetMapping
     ResponseEntity<Page<FileInfo>> getAllFiles(
-            @Parameter(description = "Pagination") Pageable pageable);
+            @Parameter(description = "Pagination parameters", example = """
+                    {
+                      "page": 0,
+                      "size": 1,
+                      "sort": "string"
+                    }""")             Pageable pageable);
 
     @Operation(summary = "Delete file", description = "Product photos: LOGISTICIAN or SUPERVISOR. Internal files: SUPERVISOR only.")
     @ApiResponses(value = {
