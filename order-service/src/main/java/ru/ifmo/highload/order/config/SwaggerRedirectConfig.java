@@ -16,7 +16,7 @@ public class SwaggerRedirectConfig {
     public RouterFunction<ServerResponse> swaggerRedirect() {
         return route(GET("/swagger-ui.html"),
                 req -> ServerResponse.status(HttpStatus.FOUND)
-                        .location(req.uri().resolve("/swagger-ui/index.html"))
+                        .location(req.uri().resolve("/webjars/swagger-ui/index.html"))
                         .build());
     }
 }
